@@ -3,7 +3,7 @@
  *
  * 22.08 EDA
  *
- * Grupo 11
+ * Grupo 6
  * Participants: Segundo Martinez Tanoira, Mariano OMS, Lucia Ruiz
  *
  * Level 6:

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project("EDAPark Controller")
+project("EDA CUP")
 
 set (CMAKE_CXX_STANDARD 11)
 

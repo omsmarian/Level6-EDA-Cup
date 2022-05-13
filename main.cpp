@@ -15,17 +15,28 @@
 #include "MQTTClient2.h"
 #include "MQTTListener2.h"
 
+#define ADDRESS "127.0.0.1"
+#define PORT 1883
+#define USER "user"
+#define PASSWORD "vdivEMMN3SQWX2Ez"
+
 using namespace std;
 
 int main(void)
 {
-    MQTTClient2 robot;
-    robot.connect("robot1.1", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
-    if (robot.isConnected())
-        cout << "hola" << endl;
-    robot.subscribe("ball/motion/state");
-    
     MQTTListener2 listener;
+    MQTTClient2 robot;
     robot.setListener(&listener);
+    robot.connect("robot1.1", ADDRESS, PORT, USER, PASSWORD);
+    robot.subscribe("ball/motion/state");
+    robot.run();
+    if(!robot.isConnected())
+    {
+        cout << "error connecting" << endl;
+    }
 
+    
+    
+
+    return 0;
 }

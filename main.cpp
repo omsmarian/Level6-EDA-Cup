@@ -23,8 +23,8 @@ int main(void)
     robot.connect("robot1.1", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
     if (robot.isConnected())
         cout << "hola" << endl;
+
     robot.subscribe("ball/motion/state");
-    
     MQTTListener2 listener;
     robot.setListener(&listener);
     robot.run();

@@ -1,6 +1,9 @@
 #include "MQTTListener2.h"
+#include <iostream>
 
-void MQTTListener2::onMessage(std::string topic, std::vector<char> payload)
+using namespace std;
+
+void MQTTListener2::onMessage(string topic, vector<char> payload)
 {
     if(topic == "ball/motion/state")
     {
@@ -11,6 +14,11 @@ void MQTTListener2::onMessage(std::string topic, std::vector<char> payload)
             cout << message[i] << " ," << endl;
         }
     }
+
+
+
+    
+
 }
 
 

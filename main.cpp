@@ -27,5 +27,5 @@ int main(void)
     
     MQTTListener2 listener;
     robot.setListener(&listener);
-
+    robot.run();
 }

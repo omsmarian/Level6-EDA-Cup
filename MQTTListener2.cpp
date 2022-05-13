@@ -4,7 +4,12 @@ void MQTTListener2::onMessage(std::string topic, std::vector<char> payload)
 {
     if(topic == "ball/motion/state")
     {
-        message = 
+        vector<float> message(12);
+        for(int i=0; i < 12; i++)
+        {
+            memcpy(&(message.data()[i]), &(payload.data()[i * sizeof(float)]),sizeof(float));
+            cout << message[i] << " ," << endl;
+        }
     }
 }
 

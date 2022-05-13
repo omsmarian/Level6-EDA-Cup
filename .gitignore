@@ -4,9 +4,9 @@
 
 /out
 /.vs
+/.vscode
 
 build/
 build/**
-
 .vs/
 .vs/**

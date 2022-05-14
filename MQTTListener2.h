@@ -12,7 +12,7 @@ public:
 
 private:
 	void printVector(std::vector<float> vector);
-
+	std::vector<char> lastPayload;
 	MQTTClient2* miau;
 	std::vector<float> ballPos;
 	std::vector<float> ballVel;

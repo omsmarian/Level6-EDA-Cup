@@ -1,18 +1,23 @@
-/*
- * Main
- *
- * 22.08 EDA
- *
- * Grupo 11
- * Participants: Segundo Martinez Tanoira, Mariano OMS, Lucia Ruiz
- *
- * Level 6:
- *
- * Main module
- */
+/*********************************************************************
+ * @file   main.cpp
+ * @brief  
+ * 
+ * @author Segundo Tanoira, Lucía Ruiz, Mariano Oms
+ *********************************************************************/
 
+#include "MQTTClient2.h"
+#include "MQTTListener2.h"
+#include <iostream>
+
+using namespace std;
 
 int main(void)
 {
-    
+    MQTTClient2 robot;
+    MQTTListener2 listener(&robot);
+    robot.setListener(&listener);
+    robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
+    if (robot.isConnected())
+        cout << "hola" << endl;
+
 }

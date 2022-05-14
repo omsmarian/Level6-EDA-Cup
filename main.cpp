@@ -19,5 +19,8 @@ int main(void)
     robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
     if (robot.isConnected())
         cout << "hola" << endl;
+    robot.subscribe("ball/motion/state");
+    robot.run();
 
+    return 0;
 }

@@ -1,5 +1,6 @@
 #include "MQTTListener2.h"
 #include <iostream>
+#include <raylib.h>
 
 using namespace std;
 
@@ -20,17 +21,27 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 	{
 		if (lastPayload != payload)
 		{
-			for (int i = 0; i < 12; i++)
+			for (int i = 0, j = 0; i < 12; i++)
 			{
 				if ((i / 3) == 0)
 					memcpy(&(ballPos[i]), &(payload[i * sizeof(float)]), sizeof(float));
+				else if ((i / 3) == 1)
+					memcpy(&(ballVel[i - 3]), &(payload[i * sizeof(float)]), sizeof(float));
+				else if ((i / 3) == 2)
+					memcpy(&(ballRot[i - 6]), &(payload[i * sizeof(float)]), sizeof(float));
+				else if ((i / 3) == 3)
+					memcpy(&(ballAngVel[i - 9]), &(payload[i * sizeof(float)]), sizeof(float));
 			}
 		printVector(ballPos);
+		printVector(ballVel);
+		printVector(ballRot);
+		printVector(ballAngVel);
 		lastPayload = payload;
 		change = true;
 		}
 	}
 	ballPos[1] = ballPos[2];
+	ballPos[2] = 45;
 	if (change)
 	{
 		vector<char> mensaje(12);
@@ -40,6 +51,7 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 		cout << "cambio" << endl;
 		change = false;
 	}
+
 }
 
 void MQTTListener2::printVector(std::vector<float> vector)

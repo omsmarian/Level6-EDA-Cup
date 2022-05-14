@@ -58,6 +58,8 @@ MQTTClient2::MQTTClient2()
     }
 
     mosquittoInstance = NULL;
+
+    listener = NULL;
 }
 
 /**
@@ -140,7 +142,7 @@ void MQTTClient2::disconnect()
 
     mosquitto_destroy(mosquittoInstance);
 
-    isMosquittoInitialized = false;
+    mosquittoInstance = false;
 }
 
 /**

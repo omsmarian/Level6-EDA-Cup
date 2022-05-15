@@ -46,7 +46,9 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 	{
 		vector<char> mensaje(12);
 		for (int i = 0; i < ballPos.size(); i++)
+		{
 			memcpy(&(mensaje[i * sizeof(float)]), &(ballPos[i]), sizeof(float));
+		}
 		miau->publish("robot1.1/pid/setpoint/set", mensaje);
 		cout << "cambio" << endl;
 		change = false;

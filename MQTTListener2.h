@@ -9,7 +9,6 @@ public:
 	MQTTListener2(MQTTClient2* mqtt);
 	void onMessage(std::string topic, std::vector<char> payload);
 
-
 private:
 	void printVector(std::vector<float> vector);
 	std::vector<char> lastPayload;

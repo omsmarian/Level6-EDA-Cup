@@ -142,7 +142,7 @@ void MQTTClient2::disconnect()
 
     mosquitto_destroy(mosquittoInstance);
 
-    mosquittoInstance = false;
+    isMosquittoInitialized = false;     // 
 }
 
 /**

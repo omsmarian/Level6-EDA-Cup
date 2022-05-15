@@ -71,7 +71,7 @@ void MQTTListener2::printVector(std::vector<float> vector)
 	cout << endl;
 }
 
-float angleCalculator(vector<float> start,vector<float> finish)
+float MQTTListener2::angleCalculator(vector<float> start,vector<float> finish)
 {
 	float cateto1 = finish[0] - start[0];
 	float cateto2 = finish[2] - start[2];
@@ -80,3 +80,5 @@ float angleCalculator(vector<float> start,vector<float> finish)
 	return angle;
 }
 
+ 
+ 

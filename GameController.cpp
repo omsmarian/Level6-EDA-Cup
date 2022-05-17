@@ -34,7 +34,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 	{
 		if (lastPayload != payload)
 		{
-			for (int i = 0, j = 0; i < 12; i++)
+			for (int i = 0; i < 12; i++)
 			{
 				if ((i / 3) == 0)
 					memcpy(&(ballPos[i]), &(payload[i * sizeof(float)]), sizeof(float));
@@ -49,7 +49,6 @@ void GameController::onMessage(string topic, vector<char> payload)
 			change = true;
 		}
 	}
-
 	printVector(ballPos);
 	printVector(playerPos);
 

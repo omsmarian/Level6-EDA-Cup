@@ -2,12 +2,21 @@
 #define MQTTListener2_h
 
 #include "MQTTClient2.h"
+#include <iostream>
+#include <raylib.h>
+#include <math.h>
+#include <utility>
+#include <raymath.h>
+#include <vector>
+
+using namespace std;
 
 enum PlayerState // estado de juego
 {
     goingToBall,
 	atBall,
-	inArea
+	inArea,
+	none
 };
 
 class MQTTListener2 : public MQTTListener
@@ -19,12 +28,14 @@ public:
 private:
 	void printVector(std::vector<float> vector);
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
-	void setRobotDestinationPoint(bool change);
+	void moveRobotToSetPoint(vector<float> setPoint);
+	vector<float> getSetPoint(vector<float>);
 	
 	//pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition);
 	void kickToGoal();
 
 	int playerState;
+	bool change;
 
 	std::vector<char> lastPayload;
 	MQTTClient2* miau;

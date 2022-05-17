@@ -8,14 +8,5 @@
 
 using namespace std;
 
-pair<int, int> actualPositionToHeatMapPosition(vector<float> );
-
-class Algorithm 
-{
-    public:
-        pair<int, int> actualPositionToHeatMapPosition(vector<float> );
-    private: 
-
-};
 
 #endif

@@ -3,6 +3,13 @@
 
 #include "MQTTClient2.h"
 
+enum PlayerState // estado de juego
+{
+    goingToBall,
+	atBall,
+	inArea
+};
+
 class MQTTListener2 : public MQTTListener
 {
 public:
@@ -12,6 +19,13 @@ public:
 private:
 	void printVector(std::vector<float> vector);
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
+	void setRobotDestinationPoint(bool change);
+	
+	//pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition);
+	void kickToGoal();
+
+	int playerState;
+
 	std::vector<char> lastPayload;
 	MQTTClient2* miau;
 	std::vector<float> ballPos;

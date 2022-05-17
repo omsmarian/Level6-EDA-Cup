@@ -48,18 +48,42 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 		change = true;
 		}
 	}
+
+	cout<< ballPos[0] << ", " << ballPos[1] << ", " << ballPos[2] << endl;
+
+	cout<< playerPos[0] << ", " << playerPos[1] << ", " << playerPos[2] << endl;
+
 	ballPos[1] = ballPos[2];
 	ballPos[2] = angleCalculator(playerPos, ballPos);
-	if (change)
+
+	cout << (ballPos[0]-playerPos[0])*(ballPos[0]-playerPos[0]) + (ballPos[1]-playerPos[2])*(ballPos[1]-playerPos[2]) << endl;
+
+	if(((ballPos[0]-playerPos[0])*(ballPos[0]-playerPos[0]) + (ballPos[1]-playerPos[2])*(ballPos[1]-playerPos[2]) ) >= 0.1)
 	{
-		vector<char> mensaje(12);
-		for (int i = 0; i < ballPos.size(); i++)
-		{
-			memcpy(&(mensaje[i * sizeof(float)]), &(ballPos[i]), sizeof(float));
-		}
-		miau->publish("robot1.1/pid/setpoint/set", mensaje);
-		change = false;
+		//playerState = goingToBall;
+		setRobotDestinationPoint(change);
+		cout << "voy a pelota" << endl;
 	}
+	else
+	{
+		//playerState = atBall;
+		cout << "voy a patear :)" << endl;
+		vector<float> goal = {4.5 , 0, 0};
+		float rotationAngle = angleCalculator(playerPos, goal);
+		setRobotDestinationPoint(change);
+
+		vector<char> mensaje(4);
+		float voltage = 200;
+		memcpy(&mensaje, &voltage, sizeof(float));
+
+		miau->publish("robot1.1/kicker/chargeVoltage/set", mensaje);
+		float kick = 1;
+		memcpy(&mensaje, &kick, sizeof(float));
+		miau->publish("robot1.1/kicker/kick/cmd", mensaje);
+
+		cout << "pateo" << endl;
+	}
+
 
 }
 
@@ -71,14 +95,56 @@ void MQTTListener2::printVector(std::vector<float> vector)
 	cout << endl;
 }
 
-float MQTTListener2::angleCalculator(vector<float> start,vector<float> finish)
+float MQTTListener2::angleCalculator(vector<float> start, vector<float> finish)
 {
 	float cateto1 = finish[0] - start[0];
 	float cateto2 = finish[2] - start[2];
 	float angle = atanf(cateto1 / cateto2) * 180 / PI;
-
+	if(angle < 0)
+	{
+		angle = 360 - angle;
+	}
 	return angle;
 }
 
  
- 
+ void MQTTListener2::setRobotDestinationPoint(bool change)
+ {
+
+	if (change)
+	{
+		vector<char> mensaje(12);
+		for (int i = 0; i < ballPos.size(); i++)
+		{
+			memcpy(&(mensaje[i * sizeof(float)]), &(ballPos[i]), sizeof(float));
+		}
+		miau->publish("robot1.1/pid/setpoint/set", mensaje);
+		change = false;
+	}
+ }
+
+/*
+ pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition)
+{
+    vector<int> auxActualPosition(2);
+
+
+    auxActualPosition[0] = actualPosition[0]*10 + 45;
+    auxActualPosition[1] = -(actualPosition[1]*10 - 30);
+
+
+    if(auxActualPosition[0] == 90)
+    {
+        auxActualPosition[0] -= 1;
+    }
+    if(auxActualPosition[1] == 60)
+    {
+        auxActualPosition[1] -= 1;
+    }
+
+    pair<int, int> index;
+    index.first = auxActualPosition[0];
+    index.second = auxActualPosition[1];
+
+    return index;
+}*/

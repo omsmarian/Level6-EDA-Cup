@@ -44,48 +44,46 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 			change = true;
 		}
 	}
-	printVector(ballPos);
-	printVector(playerPos);
 
-	vector<float> auxBall = ballPos;
-	vector<float> auxPlayer = playerPos;
+	float aux = ((ballPos[0] - playerPos[0]) * (ballPos[0] - playerPos[0]) + (ballPos[2] - playerPos[2]) * (ballPos[2] - playerPos[2]));
 
-	float aux = ((ballPos[0] - playerPos[0]) * (ballPos[0] - playerPos[0]) + (ballPos[1] - playerPos[2]) * (ballPos[1] - playerPos[2]));
+	cout << "dist: " << aux << endl;
 
-	if (((ballPos[0] - playerPos[0]) * (ballPos[0] - playerPos[0]) + (ballPos[1] - playerPos[2]) * (ballPos[1] - playerPos[2])) >= 0.1)
+	if (((ballPos[0] - playerPos[0]) * (ballPos[0] - playerPos[0]) + (ballPos[2] - playerPos[2]) * (ballPos[2] - playerPos[2])) >= 0.1)
 	{
 		playerState = goingToBall;
 	}
 	else
 	{
-		playerState = none;
+		playerState = atBall;
 	}
 	vector<float> setPoint;
 
-	switch(playerState)
+	switch (playerState)
 	{
-		case goingToBall:
-			setPoint = getSetPoint(ballPos);
-			moveRobotToSetPoint(setPoint);
-			break;
-		case atBall:
-			/*
-			cout << "voy a patear :)" << endl;
-			vector<float> goal = { 4.5 , 0 , 0 };
-			float rotationAngle = angleCalculator(playerPos, goal);
-			setRobotDestinationPoint(change);
+	case goingToBall:
+		setPoint = getSetPoint(ballPos);
+		moveRobotToSetPoint(setPoint);
+		break;
+	case atBall:
+		cout << "at ball" << endl;
+		/*
+		cout << "voy a patear :)" << endl;
+		vector<float> goal = { 4.5 , 0 , 0 };
+		float rotationAngle = angleCalculator(playerPos, goal);
+		setRobotDestinationPoint(change);
 
-			vector<char> mensaje(4);
-			float voltage = 200;
-			memcpy(&(mensaje[0]), &voltage, sizeof(float));
+		vector<char> mensaje(4);
+		float voltage = 200;
+		memcpy(&(mensaje[0]), &voltage, sizeof(float));
 
-			miau->publish("robot1.1/kicker/chargeVoltage/set", mensaje);
-			float kick = 1;
-			memcpy(&(mensaje[0]), &kick, sizeof(float));
-			miau->publish("robot1.1/kicker/kick/cmd", mensaje);
+		miau->publish("robot1.1/kicker/chargeVoltage/set", mensaje);
+		float kick = 1;
+		memcpy(&(mensaje[0]), &kick, sizeof(float));
+		miau->publish("robot1.1/kicker/kick/cmd", mensaje);
 
-			cout << "pateo" << endl;*/
-			break;
+		cout << "pateo" << endl;*/
+		break;
 	}
 }
 
@@ -108,41 +106,26 @@ float MQTTListener2::angleCalculator(vector<float> start, vector<float> finish)
 
 void MQTTListener2::moveRobotToSetPoint(vector<float> setPoint)
 {
-	if (change)
+	vector<char> mensaje(12);
+	for (int i = 0; i < setPoint.size(); i++)
 	{
-		vector<char> mensaje(12);
-		for (int i = 0; i < setPoint.size(); i++)
-		{
-			memcpy(&(mensaje[i * sizeof(float)]), &(setPoint[i]), sizeof(float));
-		}
-		miau->publish("robot1.1/pid/setpoint/set", mensaje);
-		change = false;
+		memcpy(&(mensaje[i * sizeof(float)]), &(setPoint[i]), sizeof(float));
 	}
+	miau->publish("robot1.1/pid/setpoint/set", mensaje);
+	change = false;
 }
 
 vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
- {
-	Vector2 destination = {destinationPoint[0], destinationPoint[1]};
-	Vector2 currentPosition = {playerPos[0], playerPos[1]};
+{
+	Vector2 deltaVector = { destinationPoint[0] - playerPos[0], destinationPoint[2] - playerPos[2] };
+	Vector2 currentPosition = { playerPos[0], playerPos[2] };
+	Vector2 destination = { destinationPoint[0] , destinationPoint[2] };
 	float distance = Vector2Distance(currentPosition, destination);
-	float angle = angleCalculator(playerPos, destinationPoint);
+	destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, 0.5 / distance));
 
-	if(distance > 1)
-	{
-		float deltaY = 0.1*sinf(angle);
-		float deltaX = 0.1*cosf(angle);
-		vector<float> nextSetPoint = {playerPos[0] + deltaX, playerPos[2] + deltaY, angle}; 
-		return nextSetPoint;
-	}
-	else
-	{
-		float deltaY = 0.1*sinf(angle);
-		float deltaX = 0.1*cosf(angle);
-		vector<float> nextSetPoint = {playerPos[0] + deltaX, playerPos[2] + deltaY, angle}; 
-		return nextSetPoint;
-	}
-
- }
+	vector<float> setPoint = { destination.x, destination.y, angleCalculator(playerPos, destinationPoint) };
+	return setPoint;
+}
 
 /*
  pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition)

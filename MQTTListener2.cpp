@@ -7,7 +7,7 @@ using namespace std;
 
 MQTTListener2::MQTTListener2(MQTTClient2* mqtt)
 {
-	miau = mqtt;
+	MQTTClient = mqtt;
 	ballPos.resize(3);
 	ballVel.resize(3);
 	ballRot.resize(3);
@@ -67,22 +67,26 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 		break;
 	case atBall:
 		cout << "at ball" << endl;
-		/*
-		cout << "voy a patear :)" << endl;
+		vector<char> mensajeDribbler(4);
+		float voltageDribbler = 1;
+		memcpy(&(mensajeDribbler[0]), &voltageDribbler, sizeof(float));
+		MQTTClient->publish("robot1.1/dribbler/voltage/set", mensajeDribbler);
+
+
 		vector<float> goal = { 4.5 , 0 , 0 };
 		float rotationAngle = angleCalculator(playerPos, goal);
-		setRobotDestinationPoint(change);
+		vector<char> mensajeKicker1(4);
+		float voltageKicker = 200;
+		memcpy(&(mensajeKicker1[0]), &voltageKicker, sizeof(float));
 
-		vector<char> mensaje(4);
-		float voltage = 200;
-		memcpy(&(mensaje[0]), &voltage, sizeof(float));
+		MQTTClient->publish("robot1.1/kicker/chargeVoltage/set", mensajeKicker1);
 
-		miau->publish("robot1.1/kicker/chargeVoltage/set", mensaje);
+		vector<char> mensajeKicker2(4);
 		float kick = 1;
-		memcpy(&(mensaje[0]), &kick, sizeof(float));
-		miau->publish("robot1.1/kicker/kick/cmd", mensaje);
+		memcpy(&(mensajeKicker2[0]), &kick, sizeof(float));
+		MQTTClient->publish("robot1.1/kicker/kick/cmd", mensajeKicker2);
 
-		cout << "pateo" << endl;*/
+		cout << "pateo" << endl;
 		break;
 	}
 }
@@ -111,7 +115,7 @@ void MQTTListener2::moveRobotToSetPoint(vector<float> setPoint)
 	{
 		memcpy(&(mensaje[i * sizeof(float)]), &(setPoint[i]), sizeof(float));
 	}
-	miau->publish("robot1.1/pid/setpoint/set", mensaje);
+	MQTTClient->publish("robot1.1/pid/setpoint/set", mensaje);
 	change = false;
 }
 
@@ -121,7 +125,7 @@ vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
 	Vector2 currentPosition = { playerPos[0], playerPos[2] };
 	Vector2 destination = { destinationPoint[0] , destinationPoint[2] };
 	float distance = Vector2Distance(currentPosition, destination);
-	destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, 0.5 / distance));
+	destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, 0.3 / distance));
 
 	vector<float> setPoint = { destination.x, destination.y, angleCalculator(playerPos, destinationPoint) };
 	return setPoint;

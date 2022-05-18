@@ -38,7 +38,7 @@ private:
 	bool change;
 
 	std::vector<char> lastPayload;
-	MQTTClient2* miau;
+	MQTTClient2* MQTTClient;
 	std::vector<float> ballPos;
 	std::vector<float> ballVel;
 	std::vector<float> ballRot;

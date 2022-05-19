@@ -13,7 +13,7 @@ using namespace std;
 
 enum PlayerState // estado de juego
 {
-    goingToBall,
+	goingToBall,
 	atBall,
 	inArea,
 	none
@@ -44,6 +44,7 @@ private:
 	std::vector<float> ballRot;
 	std::vector<float> ballAngVel;
 	std::vector<float> playerPos;
+	bool kick = true;
 };
 
 

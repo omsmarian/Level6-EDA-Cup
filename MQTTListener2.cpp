@@ -68,7 +68,11 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 	vector<float> goal = { 4.5,0,0 };
 	vector<float> palo1 = { 4.5,0,0.5 };
 	vector<float> palo2 = { 4.5,0,-0.5 };
+	vector<float> playerPosBehind;
+
 	int anguloPelota;
+	int anguloArco;
+
 	switch (playerState)
 	{
 	case goingToBall:
@@ -78,24 +82,28 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 		voltage = 200;
 		memcpy(&(mensajeVoltage[0]), &voltage, sizeof(float));
 		MQTTClient->publish("robot1.1/kicker/chargeVoltage/set", mensajeVoltage);
-
 		break;
+
 	case atBall:
 
-		/*if(setPoint[2] - angleCalculator(playerPos, goal) > 45)*/
-
-			// hacer q rote suave!!
-			// hacer q el cono de pateo sea más grande!!
 		setPoint = { playerPos[0], playerPos[2], angleCalculator(playerPos, goal) };
+
 		voltage = 1;
 		memcpy(&(mensajeVoltage[0]), &voltage, sizeof(float));
 		MQTTClient->publish("robot1.1/dribbler/voltage/set", mensajeVoltage);
 		moveRobotToSetPoint(setPoint);
 		
 		anguloPelota = (int)angleCalculator(playerPos, ballPos);
+		
+		anguloArco = (int)angleCalculator(playerPos, goal);
 
-		if (( anguloPelota > (int)angleCalculator(playerPos, palo1) && 
-			anguloPelota < (int)angleCalculator(playerPos, palo2)) && kick)
+		playerPosBehind = {playerPos[0]-0.7f*sinf(anguloArco*PI/180), playerPos[1], 
+							playerPos[2]-0.7f*cosf(anguloArco*PI/180)};
+
+
+		if((anguloPelota >= (int)angleCalculator(playerPosBehind, palo1) && 
+			anguloPelota < (int)angleCalculator(playerPosBehind, palo2)) && 
+			( (playerPos[1] - anguloArco) < 1 ) && kick)
 		{
 			cout << "pateo" << endl;
 			MQTTClient->publish("robot1.1/kicker/kick/cmd", mensajeVoltage);
@@ -120,7 +128,6 @@ float MQTTListener2::angleCalculator(vector<float> start, vector<float> finish)
 	float angle = atan2(cateto1, cateto2) * 180 / PI;
 	if (angle < 0)
 		angle += 360;
-	cout << "angle: " << angle << endl;
 	return angle;
 }
 
@@ -144,10 +151,21 @@ vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
 	Vector2 currentPosition = { playerPos[0], playerPos[2] };
 	Vector2 destination = { destinationPoint[0] , destinationPoint[2] };
 	float distance = Vector2Distance(currentPosition, destination);
+	float angle;
 
 	if (distance > 1)
 		destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, 1 / distance));
-	vector<float> setPoint = { destination.x, destination.y, angleCalculator(playerPos, destinationPoint) };
+
+
+	if( destinationPoint[1] - playerPos[1] > 10)
+	{
+		angle = 0.2* angleCalculator(playerPos, destinationPoint);
+	}
+	else
+	{
+		angle = angleCalculator(playerPos, destinationPoint);
+	}
+	vector<float> setPoint = { destination.x, destination.y, angle};
 	return setPoint;
 }
 

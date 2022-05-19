@@ -156,16 +156,7 @@ vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
 	if (distance > 1)
 		destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, 1 / distance));
 
-
-	if( destinationPoint[1] - playerPos[1] > 10)
-	{
-		angle = 0.2* angleCalculator(playerPos, destinationPoint);
-	}
-	else
-	{
-		angle = angleCalculator(playerPos, destinationPoint);
-	}
-	vector<float> setPoint = { destination.x, destination.y, angle};
+	vector<float> setPoint = { destination.x, destination.y, angleCalculator(playerPos, destinationPoint)};
 	return setPoint;
 }
 

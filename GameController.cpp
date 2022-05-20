@@ -1,3 +1,13 @@
+/**
+ * @file GameController.cpp
+ * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
+ * @brief Controls the Game
+ * @date 2022-05-17
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "GameController.h"
 
 using namespace std;
@@ -20,6 +30,22 @@ GameController::GameController(MQTTClient2* mqtt)
 	ballVel.resize(3);
 	playerRot.resize(3);
 	playerPos.resize(3);
+
+	image = LoadImage("../Images/1EDACUP.png");
+
+	const int dataSize = 16 * 16 * 3;
+    vector<char> payload(dataSize);
+    memcpy(payload.data(), image.data, dataSize);
+	MQTTClient->publish("robot1.1/display/lcd/set", payload);
+}
+
+/**
+ * @brief Destroy the Game Controller:: Game Controller object
+ * 
+ */
+GameController::~GameController()
+{
+	UnloadImage(image);
 }
 
 /**
@@ -111,7 +137,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 			if ((abs(goalAngle - ballAngle) < 10) && kick)		// this line calculate the error to kick
 			{
-				MQTTClient->publish("robot1.1/kicker/kick/cmd", message);			//todo lo del if puede ser una funcion
+				MQTTClient->publish("robot1.1/kicker/kick/cmd", message);
 				kick = false;
 			}
 
@@ -122,19 +148,11 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 	if (timer <= 0)
 	{
-		change = true;				//esta cadena de ifs puede ser una funcion; ej void delay(int timer)
+		change = true;
 	}
 	if (timer > 0)
 		timer--;
 
-}
-
-void GameController::printVector(std::vector<float> vector)
-{
-	cout << "vector: ";
-	for (auto x : vector)
-		cout << x << ", ";
-	cout << endl;
 }
 
 /**
@@ -206,30 +224,3 @@ float GameController::getSetAngle(vector<float> destination)
 	else
 		return targetAngle;
 }
-
-
-/*
- pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition)
-{
-	vector<int> auxActualPosition(2);
-
-
-	auxActualPosition[0] = actualPosition[0]*10 + 45;
-	auxActualPosition[1] = -(actualPosition[1]*10 - 30);
-
-
-	if(auxActualPosition[0] == 90)
-	{
-		auxActualPosition[0] -= 1;
-	}
-	if(auxActualPosition[1] == 60)
-	{
-		auxActualPosition[1] -= 1;
-	}
-
-	pair<int, int> index;
-	index.first = auxActualPosition[0];
-	index.second = auxActualPosition[1];
-
-	return index;
-}*/

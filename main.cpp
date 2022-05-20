@@ -1,9 +1,12 @@
-/*********************************************************************
- * @file   main.cpp
- * @brief  
+/**
+ * @file main.cpp
+ * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
+ * @brief 
+ * @date 2022-05-13
  * 
- * @author Segundo Tanoira, Luc�a Ruiz, Mariano Oms
- *********************************************************************/
+ * @copyright Copyright (c) 2022
+ * 
+ */
 
 #include "MQTTClient2.h"
 #include "GameController.h"
@@ -17,8 +20,6 @@ int main(void)
     GameController listener(&robot);
     robot.setListener(&listener);
     robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
-    if (robot.isConnected())
-        cout << "hola" << endl;
     robot.subscribe("ball/motion/state");
     robot.subscribe("robot1.1/motion/state");
     robot.run();

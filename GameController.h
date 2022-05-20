@@ -6,38 +6,45 @@
 #include <raylib.h>
 #include <math.h>
 #include <utility>
+/**
+ * @file GameController.h
+ * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
+ * @brief Controls the game
+ * @date 2022-05-17
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <raymath.h>
 #include <vector>
 
 using namespace std;
 
-enum PlayerState // estado de juego
+enum PlayerState
 {
 	goingToBall,
-	atBall,
-	inArea,
-	none
+	atBall
 };
 
 class GameController : public MQTTListener
 {
 public:
 	GameController(MQTTClient2* mqtt);
+	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
 private:
-	void printVector(std::vector<float> vector);
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);
 	vector<float> getSetPoint(vector<float>);
 	float getSetAngle(vector<float> destination);
-	
-	//pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition);
 	void kickToGoal();
 
 	int playerState;
 	bool change;
 	int timer;
+	Image image;
 
 	std::vector<char> lastPayload;
 	MQTTClient2* MQTTClient;

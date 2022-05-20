@@ -31,15 +31,35 @@ GameController::GameController(MQTTClient2* mqtt)
 	playerRot.resize(3);
 	playerPos.resize(3);
 
-	image = LoadImage("../Images/1EDACUP.png");
+	image = LoadImage("../../../Images/1EDACUP.png");
 
 
-	
-	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+	/*
+	void Robot::setDisplay(int imageIndex)
+{
+    Rectangle selectRectangle = {16.0F * imageIndex, 0, 16, 16};
+    Image selectedImage = ImageFromImage(displayImages, selectRectangle);
+
+    const int dataSize = 16 * 16 * 3;
+    vector<char> payload(dataSize);
+    memcpy(payload.data(), selectedImage.data, dataSize);
+
+    UnloadImage(selectedImage);
+
+    mqttClient->publish(robotId + "/display/lcd/set", payload);
+}*/
+
+
+	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
+
+	Rectangle selectRectangle = { 16.0F * 0, 0, 16, 16 };
+	Image selectedImage = ImageFromImage(image, selectRectangle);
 
 	const int dataSize = 16 * 16 * 3;
     vector<char> payload(dataSize);
-    memcpy(payload.data(), image.data, dataSize);
+    memcpy(payload.data(), selectedImage.data, dataSize);
+
+	UnloadImage(selectedImage);
 
 	MQTTClient->publish("robot1.1/display/lcd/set", payload);
 }

@@ -9,5 +9,7 @@
 build/
 build/**
 
+/.DS_Store
+
 .vs/
 .vs/**

@@ -33,9 +33,14 @@ GameController::GameController(MQTTClient2* mqtt)
 
 	image = LoadImage("../Images/1EDACUP.png");
 
+
+	
+	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+
 	const int dataSize = 16 * 16 * 3;
     vector<char> payload(dataSize);
     memcpy(payload.data(), image.data, dataSize);
+
 	MQTTClient->publish("robot1.1/display/lcd/set", payload);
 }
 

@@ -30,20 +30,22 @@ private:
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);
 	vector<float> getSetPoint(vector<float>);
+	float getSetAngle(vector<float> destination);
 	
 	//pair<int, int> actualPositionToHeatMapPosition(vector<float> actualPosition);
 	void kickToGoal();
 
 	int playerState;
 	bool change;
+	int timer;
 
 	std::vector<char> lastPayload;
 	MQTTClient2* MQTTClient;
 	std::vector<float> ballPos;
 	std::vector<float> ballVel;
-	std::vector<float> ballRot;
-	std::vector<float> ballAngVel;
 	std::vector<float> playerPos;
+	std::vector<float> playerRot;
+	float vel;
 	bool kick = true;
 };
 

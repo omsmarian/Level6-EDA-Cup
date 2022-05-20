@@ -1,5 +1,5 @@
-#ifndef MQTTListener2_h
-#define MQTTListener2_h
+#ifndef GameController_h
+#define GameController_h
 
 #include "MQTTClient2.h"
 #include <iostream>
@@ -19,10 +19,10 @@ enum PlayerState // estado de juego
 	none
 };
 
-class MQTTListener2 : public MQTTListener
+class GameController : public MQTTListener
 {
 public:
-	MQTTListener2(MQTTClient2* mqtt);
+	GameController(MQTTClient2* mqtt);
 	void onMessage(std::string topic, std::vector<char> payload);
 
 private:
@@ -52,4 +52,4 @@ private:
 
 
 
-#endif // !MQTTListener2_h
+#endif // !GameController_h

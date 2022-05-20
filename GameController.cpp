@@ -1,11 +1,15 @@
-#include "MQTTListener2.h"
+#include "GameController.h"
 
 using namespace std;
 
 #define HEATMAPROWS 60
 #define HEATMAPCOLUMNS 90
 
-MQTTListener2::MQTTListener2(MQTTClient2* mqtt)
+/**
+ * @brief Construct a new GameController::GameController object and intialize the data members
+ * @param mqtt the player to be controlled
+ */
+GameController::GameController(MQTTClient2* mqtt)
 {
 	MQTTClient = mqtt;
 
@@ -18,7 +22,12 @@ MQTTListener2::MQTTListener2(MQTTClient2* mqtt)
 	playerPos.resize(3);
 }
 
-void MQTTListener2::onMessage(string topic, vector<char> payload)
+/**
+ * @brief with the information received, control the game
+ * @param topic strings that constains a path of diferent elements 
+ * @param payload containt data of a topic given
+ */
+void GameController::onMessage(string topic, vector<char> payload)
 {
 	if (topic == "robot1.1/motion/state")
 	{
@@ -100,7 +109,7 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 
 			goalAngle = angleCalculator(playerPos, goal);
 
-			if ((abs(goalAngle - ballAngle) < 10) && kick)		// esto calcula q el error sea tolerable, entonces patea
+			if ((abs(goalAngle - ballAngle) < 10) && kick)		// this line calculate the error to kick
 			{
 				MQTTClient->publish("robot1.1/kicker/kick/cmd", message);			//todo lo del if puede ser una funcion
 				kick = false;
@@ -120,33 +129,35 @@ void MQTTListener2::onMessage(string topic, vector<char> payload)
 
 }
 
-void MQTTListener2::printVector(std::vector<float> vector)
+void GameController::printVector(std::vector<float> vector)
 {
 	cout << "vector: ";
 	for (auto x : vector)
 		cout << x << ", ";
 	cout << endl;
 }
+
 /**
  * @brief Calculates angle from the points given
- * @param First point
- * @param Second point
+ * @param start First point
+ * @param finish Second point
  * @return Angle
  */
-float MQTTListener2::angleCalculator(vector<float> start, vector<float> finish)
+float GameController::angleCalculator(vector<float> start, vector<float> finish)
 {
-	float cateto1 = finish[0] - start[0];
-	float cateto2 = finish[2] - start[2];
-	float angle = atan2(cateto1, cateto2) * 180 / PI;
+	float leg1 = finish[0] - start[0];
+	float leg2 = finish[2] - start[2];
+	float angle = atan2(leg1, leg2) * 180 / PI;
 	if (angle < 0)
 		angle += 360;
 	return angle;
 }
 
 /**
- * @brief Moves the robot
+ * @brief Moves the robot to a position
+ * @param setPoint the point where the robot will go
  */
-void MQTTListener2::moveRobotToSetPoint(vector<float> setPoint)
+void GameController::moveRobotToSetPoint(vector<float> setPoint)
 {
 	vector<char> mensaje(12);
 	memcpy(mensaje.data(), setPoint.data(), 3 * sizeof(float));
@@ -154,9 +165,11 @@ void MQTTListener2::moveRobotToSetPoint(vector<float> setPoint)
 }
 
 /**
- * @brief Calculate the next position
+ * @brief given the end position, divide the path into intervals and return the next position
+ * @param destinationPoint 
+ * @return next position
  */
-vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
+vector<float> GameController::getSetPoint(vector<float> destinationPoint)
 {
 	Vector2 deltaVector = { destinationPoint[0] - playerPos[0],
 		destinationPoint[2] - playerPos[2] };
@@ -173,9 +186,11 @@ vector<float> MQTTListener2::getSetPoint(vector<float> destinationPoint)
 }
 
 /**
- * @brief Calculate the next angle (en intervalos)
+ * @brief given the final angle, divide the path into intervals and return the next angle
+ * @param destination 
+ * @return next angle
  */
-float MQTTListener2::getSetAngle(vector<float> destination)
+float GameController::getSetAngle(vector<float> destination)
 {
 	float initialAngle = angleCalculator(playerPos, ballPos);
 	float targetAngle = angleCalculator(playerPos, destination);

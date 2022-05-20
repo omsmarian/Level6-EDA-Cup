@@ -16,7 +16,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_link_options(-fsanitize=undefined)
 endif()
 
-add_executable(edacup main.cpp MQTTClient2.cpp MQTTListener2.cpp)
+add_executable(edacup main.cpp MQTTClient2.cpp GameController.cpp)
 
 # Packages
 find_package(raylib CONFIG REQUIRED)

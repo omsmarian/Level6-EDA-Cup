@@ -30,31 +30,32 @@ enum PlayerState
 class GameController : public MQTTListener
 {
 public:
+
 	GameController(MQTTClient2* mqtt);
 	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
 
 private:
+
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);
 	vector<float> getSetPoint(vector<float>);
 	float getSetAngle(vector<float> destination);
-	void kickToGoal();
 
-	int playerState;
-	bool change;
-	int timer;
+	uint8_t playerState;
+	uint8_t timer;
 	Image image;
 
-	std::vector<char> lastPayload;
 	MQTTClient2* MQTTClient;
+	
+	std::vector<char> lastPayload;
 	std::vector<float> ballPos;
-	std::vector<float> ballVel;
 	std::vector<float> playerPos;
 	std::vector<float> playerRot;
-	float vel;
-	bool kick = true;
+	
+	bool kick;
+	bool update;
 };
 
 

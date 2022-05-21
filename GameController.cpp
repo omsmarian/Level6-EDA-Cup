@@ -16,7 +16,8 @@ using namespace std;
 #define HEATMAPCOLUMNS 90
 
 /**
- * @brief Construct a new GameController::GameController object and intialize the data members
+ * @brief Construct a new GameController::GameController object, intialize the data members
+ * and set the display
  * @param mqtt the player to be controlled
  */
 GameController::GameController(MQTTClient2* mqtt)
@@ -31,28 +32,10 @@ GameController::GameController(MQTTClient2* mqtt)
 	playerRot.resize(3);
 	playerPos.resize(3);
 
-	image = LoadImage("../../../Images/1EDACUP.png");
-
-
-	/*
-	void Robot::setDisplay(int imageIndex)
-{
-    Rectangle selectRectangle = {16.0F * imageIndex, 0, 16, 16};
-    Image selectedImage = ImageFromImage(displayImages, selectRectangle);
-
-    const int dataSize = 16 * 16 * 3;
-    vector<char> payload(dataSize);
-    memcpy(payload.data(), selectedImage.data, dataSize);
-
-    UnloadImage(selectedImage);
-
-    mqttClient->publish(robotId + "/display/lcd/set", payload);
-}*/
-
-
+	image = LoadImage("../Images/image.png");
 	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
 
-	Rectangle selectRectangle = { 16.0F * 0, 0, 16, 16 };
+    Rectangle selectRectangle = {16.0F * 0, 0, 16, 16};
 	Image selectedImage = ImageFromImage(image, selectRectangle);
 
 	const int dataSize = 16 * 16 * 3;
@@ -72,6 +55,8 @@ GameController::~GameController()
 {
 	UnloadImage(image);
 }
+
+
 
 /**
  * @brief with the information received, control the game

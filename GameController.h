@@ -34,6 +34,7 @@ public:
 	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
+
 private:
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);

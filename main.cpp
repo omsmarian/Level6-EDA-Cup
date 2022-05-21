@@ -17,12 +17,15 @@ using namespace std;
 int main(void)
 {
     MQTTClient2 robot;
+    robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
     GameController listener(&robot);
     robot.setListener(&listener);
-    robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
     robot.subscribe("ball/motion/state");
     robot.subscribe("robot1.1/motion/state");
     robot.run();
+
+
+
 
     return 0;
 }

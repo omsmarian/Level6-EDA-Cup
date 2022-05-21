@@ -1,21 +1,19 @@
-#ifndef GameController_h
-#define GameController_h
-
-#include "MQTTClient2.h"
-#include <iostream>
-#include <raylib.h>
-#include <math.h>
-#include <utility>
 /**
  * @file GameController.h
  * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
  * @brief Controls the game
  * @date 2022-05-17
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
+#ifndef GameController_h
+#define GameController_h
+
+#include "MQTTClient2.h"
+#include <raylib.h>
+#include <math.h>
 #include <raymath.h>
 #include <vector>
 

@@ -1,7 +1,7 @@
 /**
  * @file main.cpp
  * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
- * @brief 
+ * @brief main module
  * @date 2022-05-13
  * 
  * @copyright Copyright (c) 2022
@@ -10,7 +10,6 @@
 
 #include "MQTTClient2.h"
 #include "GameController.h"
-#include <iostream>
 
 using namespace std;
 

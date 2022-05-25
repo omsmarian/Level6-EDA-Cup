@@ -10,21 +10,44 @@
 
 #include "MQTTClient2.h"
 #include "GameController.h"
+#include <list>
 
 using namespace std;
 
 int main(void)
 {
-    MQTTClient2 robot;
-    robot.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
-    GameController listener(&robot);
-    robot.setListener(&listener);
-    robot.subscribe("ball/motion/state");
-    robot.subscribe("robot1.1/motion/state");
-    robot.run();
+    MQTTClient2 MQTTClient;
 
+    MQTTClient.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
 
+    Player robot1("1", MQTTClient);
 
+    list<Player*> playerList;
+
+    playerList.push_back(&robot1);
+
+    GameController listener(&MQTTClient, playerList);
+    MQTTClient.setListener(&listener);
+
+    //Player robot2("2");
+    //Player robot3("3");
+    //Player robot4("4");
+    //Player robot5("5");
+    //Player robot6("6");
+
+    //list<Player*> playerList;
+
+    //playerList.push_back(&robot1);
+    //playerList.push_back(&robot2);
+    //playerList.push_back(&robot3);
+    //playerList.push_back(&robot4);
+    //playerList.push_back(&robot5);
+    //playerList.push_back(&robot6);
+
+    MQTTClient.subscribe("ball/motion/state");
+    MQTTClient.subscribe("robot1.1/motion/state");
+
+    MQTTClient.run();
 
     return 0;
 }

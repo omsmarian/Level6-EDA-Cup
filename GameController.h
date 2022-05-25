@@ -12,6 +12,7 @@
 #define GameController_h
 
 #include "MQTTClient2.h"
+#include "Player.h"
 #include <raylib.h>
 #include <math.h>
 #include <raymath.h>
@@ -29,28 +30,29 @@ class GameController : public MQTTListener
 {
 public:
 
-	GameController(MQTTClient2* mqtt);
+	GameController(MQTTClient2* mqtt, list<Player*> playerList);
 	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
 
 private:
 
-	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
+/*	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);
 	vector<float> getSetPoint(vector<float>);
-	float getSetAngle(vector<float> destination);
+	float getSetAngle(vector<float> destination);*/
 
 	uint8_t playerState;
 	uint8_t timer;
-	Image image;
+	//Image image;
 
 	MQTTClient2* MQTTClient;
+	list<Player*> playerList;
 	
 	std::vector<char> lastPayload;
-	std::vector<float> ballPos;
+	/*std::vector<float> ballPos;
 	std::vector<float> playerPos;
-	std::vector<float> playerRot;
+	std::vector<float> playerRot;*/
 	
 	bool kick;
 	bool update;

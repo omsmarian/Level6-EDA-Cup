@@ -23,16 +23,13 @@ using namespace std;
  * and set the display
  * @param mqtt the player to be controlled
  */
-GameController::GameController(MQTTClient2* mqtt, list<Player*> playerList)
+GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
 {
 	MQTTClient = mqtt;
-
-	for(int i = 0; i<= playerList.size(); i++)
+	for(int i = 5 ; i >= 0 ; i--)
 	{
-		this->playerList.push_back()
+		playerList.push_back(auxList[i]);
 	}
-	this->playerList = playerList;
-
 
 	kick = true;
 	update = false;
@@ -56,11 +53,12 @@ GameController::~GameController()
  */
 void GameController::onMessage(string topic, vector<char> payload)
 {
-	if (topic == (Player->robotId + "/motion/state"))
+	
+	if (topic == (playerList[0]->robotId + "/motion/state"))
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			memcpy(&(Player->playerPos[j]), &(payload[j * sizeof(float)]), sizeof(float));
+			memcpy(&(playerList[0]->playerPos[j]), &(payload[j * sizeof(float)]), sizeof(float));
 		}
 	}
 	else if (topic == "ball/motion/state")
@@ -69,8 +67,8 @@ void GameController::onMessage(string topic, vector<char> payload)
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				float aux = Player->ballPos[i];
-				memcpy(&(Player->ballPos[i]), &(payload[i * sizeof(float)]), sizeof(float));
+				float aux = playerList[0]->ballPos[i];
+				memcpy(&(playerList[0]->ballPos[i]) , &(payload[i * sizeof(float)]), sizeof(float));
 			}
 			lastPayload = payload;
 		}
@@ -84,13 +82,13 @@ void GameController::onMessage(string topic, vector<char> payload)
 	float ballAngle;
 	float goalAngle;
 
-	if (Player->ballPos[1] > 0.1)
+	if (playerList[0]->ballPos[1] > 0.1)
 		kick = true;
 
 	if (kick)
 	{
-		if (((Player->ballPos[0] - Player->playerPos[0]) * (Player->ballPos[0] - Player->playerPos[0]) +
-			(Player->ballPos[2] - Player->playerPos[2]) * (Player->ballPos[2] - Player->playerPos[2])) >= MIN_DISTANCE)
+		if (((playerList[0]->ballPos[0] - playerList[0]->playerPos[0]) * (playerList[0]->ballPos[0] - playerList[0]->playerPos[0]) +
+			(playerList[0]->ballPos[2] - playerList[0]->playerPos[2]) * (playerList[0]->ballPos[2] - playerList[0]->playerPos[2])) >= MIN_DISTANCE)
 		{
 			playerState = goingToBall;
 		}
@@ -108,14 +106,14 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 			voltage = 0;
 			memcpy(&(message[0]), &voltage, sizeof(float));
-			MQTTClient->publish(Player->robotId + "/dribbler/voltage/set", message);
+			MQTTClient->publish(playerList[0]->robotId + "/dribbler/voltage/set", message);
 
-			setPoint = Player->getSetPoint(Player->ballPos);
-			Player->moveRobotToSetPoint(setPoint);
+			setPoint = playerList[0]->getSetPoint(playerList[0]->ballPos);
+			playerList[0]->moveRobotToSetPoint(setPoint);
 
 			voltage = CHARGE_VALUE;
 			memcpy(&(message[0]), &voltage, sizeof(float));
-			MQTTClient->publish(Player->robotId + "/kicker/chargeVoltage/set", message);
+			MQTTClient->publish(playerList[0]->robotId + "/kicker/chargeVoltage/set", message);
 
 			break;
 
@@ -124,20 +122,20 @@ void GameController::onMessage(string topic, vector<char> payload)
 			timer = 1;
 			voltage = 3;
 			memcpy(&(message[0]), &voltage, sizeof(float));
-			MQTTClient->publish(Player->robotId + "/dribbler/voltage/set", message);
+			MQTTClient->publish(playerList[0]->robotId + "/dribbler/voltage/set", message);
 
-			setPoint = { Player->playerPos[0], Player->playerPos[2], Player->getSetAngle(goal) };
+			setPoint = { playerList[0]->playerPos[0], playerList[0]->playerPos[2], playerList[0]->getSetAngle(goal) };
 
 
-			Player->moveRobotToSetPoint(setPoint);
+			playerList[0]->moveRobotToSetPoint(setPoint);
 
-			ballAngle = Player->angleCalculator(Player->playerPos, Player->ballPos);
+			ballAngle = playerList[0]->angleCalculator(playerList[0]->playerPos, playerList[0]->ballPos);
 
-			goalAngle = Player->angleCalculator(Player->playerPos, goal);
+			goalAngle = playerList[0]->angleCalculator(playerList[0]->playerPos, goal);
 
 			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR) && kick)		// calculates the aceptable error to kick
 			{
-				MQTTClient->publish(Player->robotId  + "/kicker/kick/cmd", message);
+				MQTTClient->publish(playerList[0]->robotId  + "/kicker/kick/cmd", message);
 				kick = false;
 			}
 

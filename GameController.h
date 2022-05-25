@@ -30,7 +30,7 @@ class GameController : public MQTTListener
 {
 public:
 
-	GameController(MQTTClient2* mqtt, list<Player*> playerList);
+	GameController(MQTTClient2* mqtt, vector<Player*> playerList);
 	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
@@ -47,7 +47,7 @@ private:
 	//Image image;
 
 	MQTTClient2* MQTTClient;
-	list<Player*> playerList;
+	vector<Player*> playerList;
 	
 	std::vector<char> lastPayload;
 	/*std::vector<float> ballPos;

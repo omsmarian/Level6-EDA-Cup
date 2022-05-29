@@ -10,6 +10,8 @@
 
 #include "GameController.h"
 
+#include <iostream>
+
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
 #define MINIMAL_ERROR 10
@@ -32,8 +34,9 @@ GameController::GameController(MQTTClient2* mqtt)
 	timer = 0;
 
 	ballPos.resize(3);
-	playerRot.resize(3);
+	ballVel.resize(3);
 	playerPos.resize(3);
+	playerPos2.resize(3);
 
 	image = LoadImage("../../../Images/image.png");
 	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
@@ -48,6 +51,15 @@ GameController::GameController(MQTTClient2* mqtt)
 	UnloadImage(selectedImage);
 
 	MQTTClient->publish("robot1.1/display/lcd/set", payload);
+
+	selectRectangle = { 16.0F * 1, 0, 16, 16 };
+	selectedImage = ImageFromImage(image, selectRectangle);
+
+	memcpy(payload.data(), selectedImage.data, dataSize);
+
+	UnloadImage(selectedImage);
+
+	MQTTClient->publish("robot1.2/display/lcd/set", payload);
 }
 
 /**
@@ -75,13 +87,23 @@ void GameController::onMessage(string topic, vector<char> payload)
 			memcpy(&(playerPos[j]), &(payload[j * sizeof(float)]), sizeof(float));
 		}
 	}
+	else if (topic == "robot1.2/motion/state")
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			memcpy(&(playerPos2[j]), &(payload[j * sizeof(float)]), sizeof(float));
+		}
+	}
 	else if (topic == "ball/motion/state")
 	{
 		if (lastPayload != payload)
 		{
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 6; i++)
 			{
-				memcpy(&(ballPos[i]), &(payload[i * sizeof(float)]), sizeof(float));
+				if((i/3) == 0)
+					memcpy(&(ballPos[i]), &(payload[i * sizeof(float)]), sizeof(float));
+				if ((i / 3) == 1)
+					memcpy(&(ballVel[i - 3]), &(payload[i * sizeof(float)]), sizeof(float));
 			}
 			lastPayload = payload;
 		}
@@ -94,6 +116,14 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 	float ballAngle;
 	float goalAngle;
+
+
+	setPoint = getSetPoint2({ -4.5,0,0 });
+	moveRobot2ToSetPoint(setPoint);
+
+	Vector2 vel = { ballVel[0], ballVel[2] };
+
+	cout << Vector2Length(vel) << endl;
 
 	if (ballPos[1] > 0.1)
 		kick = true;
@@ -134,7 +164,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 			timer = 1;
 			voltage = 3;
-			memcpy(&(message[0]), &voltage, sizeof(float));
+			memcpy(message.data(), &voltage, sizeof(float));
 			MQTTClient->publish("robot1.1/dribbler/voltage/set", message);
 
 			setPoint = { playerPos[0], playerPos[2], getSetAngle(goal) };
@@ -147,6 +177,8 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR) && kick)		// calculates the aceptable error to kick
 			{
+				voltage = 0.8;
+				memcpy(message.data(), &voltage, sizeof(float));
 				MQTTClient->publish("robot1.1/kicker/kick/cmd", message);
 				kick = false;
 			}
@@ -192,6 +224,14 @@ void GameController::moveRobotToSetPoint(vector<float> setPoint)
 	MQTTClient->publish("robot1.1/pid/setpoint/set", mensaje);
 }
 
+
+void GameController::moveRobot2ToSetPoint(vector<float> setPoint)
+{
+	vector<char> mensaje(12);
+	memcpy(mensaje.data(), setPoint.data(), 3 * sizeof(float));
+	MQTTClient->publish("robot1.2/pid/setpoint/set", mensaje);
+}
+
 /**
  * @brief given the end position, divide the path into intervals and return the next position
  * @param destinationPoint
@@ -210,6 +250,22 @@ vector<float> GameController::getSetPoint(vector<float> destinationPoint)
 
 	vector<float> setPoint = { destination.x, destination.y,
 		angleCalculator(playerPos, destinationPoint) };
+	return setPoint;
+}
+
+vector<float> GameController::getSetPoint2(vector<float> destinationPoint)
+{
+	Vector2 deltaVector = { destinationPoint[0] - playerPos[0],
+		destinationPoint[2] - playerPos[2] };
+	Vector2 currentPosition = { playerPos[0], playerPos[2] };
+	Vector2 destination = { destinationPoint[0] , destinationPoint[2] };
+	float distance = Vector2Distance(currentPosition, destination);
+
+	if (distance > DELTA_DISTANCE)
+		destination = Vector2Add(currentPosition, Vector2Scale(deltaVector, DELTA_DISTANCE / distance));
+
+	vector<float> setPoint = { destination.x, destination.y,
+		angleCalculator(playerPos2, ballPos) };
 	return setPoint;
 }
 

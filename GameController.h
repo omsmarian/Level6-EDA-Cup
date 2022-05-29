@@ -38,7 +38,9 @@ private:
 
 	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
 	void moveRobotToSetPoint(vector<float> setPoint);
+	void moveRobot2ToSetPoint(vector<float> setPoint);
 	vector<float> getSetPoint(vector<float>);
+	vector<float> getSetPoint2(vector<float>);
 	float getSetAngle(vector<float> destination);
 
 	uint8_t playerState;
@@ -49,8 +51,9 @@ private:
 	
 	std::vector<char> lastPayload;
 	std::vector<float> ballPos;
+	std::vector<float> ballVel;
 	std::vector<float> playerPos;
-	std::vector<float> playerRot;
+	std::vector<float> playerPos2;
 	
 	bool kick;
 	bool update;

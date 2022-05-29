@@ -21,6 +21,7 @@ int main(void)
     robot.setListener(&listener);
     robot.subscribe("ball/motion/state");
     robot.subscribe("robot1.1/motion/state");
+    robot.subscribe("robot1.2/motion/state");
     robot.run();
 
 

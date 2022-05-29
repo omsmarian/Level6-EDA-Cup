@@ -1,5 +1,8 @@
 #include "Player.h"
 #include "math.h"
+#include <iostream>
+
+using namespace std;
 
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
@@ -7,10 +10,19 @@
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 1
 
-Player::Player(string robotIndex, MQTTClient2 &MQTTClient)
+Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 {
-
-	robotId = "robot1." + robotIndex;
+	if(teamNumber == '1')
+	{
+		teamNum = 1;
+		robotId = "robot1." + robotIndex;
+	}
+	else if (teamNumber == '2')
+	{
+		teamNum = 2;
+		robotId = "robot2." + robotIndex;
+	}
+	cout << robotId << endl;
 
 	this->MQTTClient = &MQTTClient;
 	ballPos.resize(3);
@@ -105,4 +117,34 @@ float Player::getSetAngle(vector<float> destination)
 	}
 	else
 		return targetAngle;
+}
+
+
+void Player::moveRobotToBall()
+{
+	float voltage = 0;
+	vector<char> message(4);
+
+	memcpy(&(message[0]), &voltage, sizeof(float));
+	MQTTClient->publish(robotId + "/dribbler/voltage/set", message);
+
+	vector<float> setPoint = getSetPoint(ballPos);
+	moveRobotToSetPoint(setPoint);
+
+	voltage = CHARGE_VALUE;
+	memcpy(&(message[0]), &voltage, sizeof(float));
+	MQTTClient->publish(robotId + "/kicker/chargeVoltage/set", message);
+
+}
+
+void Player::removeRobot()
+{
+
+}
+
+void Player::setInitialPosition(vector<float> destinationPoint)
+{
+	vector<float> setPoint = getSetPoint(destinationPoint);
+	moveRobotToSetPoint(setPoint);
+
 }

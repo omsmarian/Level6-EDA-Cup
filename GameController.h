@@ -26,6 +26,20 @@ enum PlayerState
 	atBall
 };
 
+enum GameState
+{
+	preKickOff,
+	kickOff,
+	preFreeKick,
+	freeKick,
+	prePenaltyKick,
+	penaltyKick,
+	pauseGame,
+	continueGame,
+	removeRobot,
+	addRobot
+};
+
 class GameController : public MQTTListener
 {
 public:
@@ -37,11 +51,11 @@ public:
 
 private:
 
-/*	float angleCalculator(std::vector<float> vector1, std::vector<float> vector2);
-	void moveRobotToSetPoint(vector<float> setPoint);
-	vector<float> getSetPoint(vector<float>);
-	float getSetAngle(vector<float> destination);*/
+	void recieveInformation(string topic, vector<char> payload);
+	void setInitialPlayerPositions();
 
+
+	int gameState;
 	uint8_t playerState;
 	uint8_t timer;
 	//Image image;
@@ -50,10 +64,10 @@ private:
 	vector<Player*> playerList;
 	
 	std::vector<char> lastPayload;
-	/*std::vector<float> ballPos;
-	std::vector<float> playerPos;
-	std::vector<float> playerRot;*/
-	
+
+
+	int teamMessageRefersTo;
+	int teamNumber;
 	bool kick;
 	bool update;
 };

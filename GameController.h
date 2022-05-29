@@ -37,7 +37,8 @@ enum GameState
 	pauseGame,
 	continueGame,
 	removeRobot,
-	addRobot
+	addRobot,
+	none
 };
 
 class GameController : public MQTTListener

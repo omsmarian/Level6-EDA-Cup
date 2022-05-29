@@ -134,7 +134,6 @@ void Player::moveRobotToBall()
 	voltage = CHARGE_VALUE;
 	memcpy(&(message[0]), &voltage, sizeof(float));
 	MQTTClient->publish(robotId + "/kicker/chargeVoltage/set", message);
-
 }
 
 void Player::removeRobot()

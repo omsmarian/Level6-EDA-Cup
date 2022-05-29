@@ -43,6 +43,11 @@ int main(int argc , char * argv[])
 
     MQTTClient.subscribe("ball/motion/state");
     MQTTClient.subscribe("robot1.1/motion/state");
+    MQTTClient.subscribe("edacup/preKickOff");
+    MQTTClient.subscribe("edacup/kickOff");
+    MQTTClient.subscribe("edacup/preFreeKick");
+    MQTTClient.subscribe("edacup/freeKick");
+    MQTTClient.subscribe("edacup/prePenaltyKick");
 
     MQTTClient.run();
 

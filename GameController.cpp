@@ -35,6 +35,7 @@ GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
 	update = false;
 	timer = 0;
 	teamNumber = playerList[0]->teamNum;
+	gameState = none;
 
 }
 
@@ -62,6 +63,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 	{
 		case preKickOff:
 			setInitialPlayerPositions();
+			playerList[0]->moveRobotToBall();
 			break;
 
 		case kickOff:
@@ -92,13 +94,11 @@ void GameController::onMessage(string topic, vector<char> payload)
 			break;
 	}
 
-
-
 	vector<char> message(4);
 	float voltage;
 
 	vector<float> setPoint;
-	vector<float> goal = { -4.5,0,0 };
+	vector<float> goal = { -4.5, 0 , 0 };
 
 	float ballAngle;
 	float goalAngle;
@@ -193,34 +193,34 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	if (topic == "edacup/preKickOff")
 	{
 		std::cout << "preKickOFF" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = preKickOff;
 	}
 	if (topic == "edacup/kickOff")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = kickOff;
 	}
 	if (topic == "edacup/preFreeKick")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = preFreeKick;
 	}
 	if (topic == "edacup/freeKick")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = freeKick;
 	}
 	if (topic == "edacup/prePenaltyKick")
 	{
 		std::cout << "prePenaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = prePenaltyKick;
 	}
 	if (topic == "edacup/penaltyKick")
 	{
 		std::cout << "penaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 		gameState = penaltyKick;
 	}
 	if (topic == "edacup/pause")
@@ -233,7 +233,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	if (topic == "edacup/removeRobot")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 
 		if(teamMessageRefersTo == playerList[0]->teamNum)
 		{
@@ -242,7 +242,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	if (topic == "edacup/addRobot")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(u_int8_t));
+		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
 
 		if(teamMessageRefersTo == playerList[0]->teamNum)
 		{
@@ -254,12 +254,8 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPlayerPositions()
 {
-	vector<float> destinationPoint;
-	if(teamMessageRefersTo == teamNumber)
-	{
-		playerList[0]->moveRobotToBall();
-	}
-	else
+	vector<float> destinationPoint(3);
+	if(teamMessageRefersTo != teamNumber)
 	{
 		destinationPoint[0] = -1;
 		destinationPoint[2] = 0;

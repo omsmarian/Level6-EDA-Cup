@@ -54,6 +54,9 @@ private:
 
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPlayerPositions();
+	void createHeatMap();
+	void updateHeatMap();
+	void clearHeatMap();
 
 
 	int gameState;

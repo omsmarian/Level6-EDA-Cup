@@ -59,6 +59,8 @@ void GameController::onMessage(string topic, vector<char> payload)
 	
 	recieveInformation(topic, payload);
 
+	setInitialPlayerPositions();
+
 	switch (gameState)
 	{
 		case preKickOff:
@@ -255,16 +257,20 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 void GameController::setInitialPlayerPositions()
 {
 	vector<float> destinationPoint(3);
-	if(teamMessageRefersTo != teamNumber)
+	/*if(teamMessageRefersTo != teamNumber)
 	{
 		destinationPoint[0] = -1;
 		destinationPoint[2] = 0;
 		playerList[0]->setInitialPosition(destinationPoint);
-	}
+	}*/
+
+	destinationPoint[0] = -1;
+	destinationPoint[2] = 0;
+	playerList[0]->setInitialPosition(destinationPoint);
 	destinationPoint[0] = -2;
 	destinationPoint[2] = 1;
 	playerList[1]->setInitialPosition(destinationPoint);
-	destinationPoint[2] = -1; 
+	destinationPoint[2] = -1;
 	playerList[2]->setInitialPosition(destinationPoint);
 	destinationPoint[0] = -3.5;
 	destinationPoint[2] = 2;
@@ -273,4 +279,22 @@ void GameController::setInitialPlayerPositions()
 	playerList[4]->setInitialPosition(destinationPoint);
 	destinationPoint[2] = -2;
 	playerList[5]->setInitialPosition(destinationPoint);
+}
+
+
+
+void GameController::createHeatMap()
+{
+
+}
+
+
+void GameController::updateHeatMap()
+{
+
+}
+
+void GameController::clearHeatMap()
+{
+
 }

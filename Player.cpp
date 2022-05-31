@@ -73,7 +73,7 @@ void Player::moveRobotToSetPoint(vector<float> setPoint)
 {
 	vector<char> mensaje(12);
 	memcpy(mensaje.data(), setPoint.data(), 3 * sizeof(float));
-	MQTTClient->publish("robot1.1/pid/setpoint/set", mensaje);
+	MQTTClient->publish(robotId + "/pid/setpoint/set", mensaje);
 }
 
 /**
@@ -145,5 +145,6 @@ void Player::setInitialPosition(vector<float> destinationPoint)
 {
 	vector<float> setPoint = getSetPoint(destinationPoint);
 	moveRobotToSetPoint(setPoint);
+
 
 }

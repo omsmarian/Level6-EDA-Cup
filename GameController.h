@@ -17,14 +17,9 @@
 #include <math.h>
 #include <raymath.h>
 #include <vector>
+#include <array>
 
 using namespace std;
-
-enum PlayerState
-{
-	goingToBall,
-	atBall
-};
 
 enum GameState
 {
@@ -44,36 +39,28 @@ enum GameState
 class GameController : public MQTTListener
 {
 public:
-
-	GameController(MQTTClient2* mqtt, vector<Player*> playerList);
+	GameController(MQTTClient2 *mqtt, vector<Player *> playerList);
 	~GameController();
 	void onMessage(std::string topic, std::vector<char> payload);
 
-
 private:
-
 	void recieveInformation(string topic, vector<char> payload);
-	void setInitialPlayerPositions();
+	void setInitialPositions();
 
-
-	int gameState;
-	uint8_t playerState;
 	uint8_t timer;
-	//Image image;
+	// Image image;
 
-	MQTTClient2* MQTTClient;
-	vector<Player*> playerList;
-	
+	MQTTClient2 *MQTTClient;
+	vector<Player *> playerList;
+
 	std::vector<char> lastPayload;
 
+	Vector2 ballPos;
+	float ballHeight;
+	array<Vector2, 6> teamPos, enemyPos;
 
-	int teamMessageRefersTo;
-	int teamNumber;
-	bool kick;
-	bool update;
+	int gameState, teamMessageRefersTo, teamNumber, teamSize = 6;
+	bool update = false, enemyHasBall = false;
 };
-
-
-
 
 #endif // !GameController_h

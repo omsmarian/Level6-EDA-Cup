@@ -10,6 +10,7 @@
 
 #include "GameController.h"
 #include <iostream>
+#include <cstring>
 
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
@@ -24,19 +25,17 @@ using namespace std;
  * and set the display
  * @param mqtt the player to be controlled
  */
-GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
+GameController::GameController(MQTTClient2 *mqtt, vector<Player *> auxList)
 {
 	MQTTClient = mqtt;
-	for(int i = 5 ; i >= 0 ; i--)
+	for (int i = 5; i >= 0; i--)
 	{
 		playerList.push_back(auxList[i]);
 	}
-	kick = true;
 	update = false;
 	timer = 0;
 	teamNumber = playerList[0]->teamNum;
 	gameState = none;
-
 }
 
 /**
@@ -45,9 +44,7 @@ GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
  */
 GameController::~GameController()
 {
-
 }
-
 
 /**
  * @brief with the information received, control the game
@@ -56,221 +53,155 @@ GameController::~GameController()
  */
 void GameController::onMessage(string topic, vector<char> payload)
 {
-	
 	recieveInformation(topic, payload);
 
 	switch (gameState)
 	{
-		case preKickOff:
-			setInitialPlayerPositions();
-			playerList[0]->moveRobotToBall();
-			break;
+	case preKickOff:
+		setInitialPositions();
+		playerList[0]->moveToBall();
+		break;
 
-		case kickOff:
-			break;
+	case kickOff:
+		break;
 
-		case preFreeKick:
-			break;
-		
-		case freeKick:
-			break;
+	case preFreeKick:
+		break;
 
-		case prePenaltyKick:
-			break;
-		
-		case penaltyKick:
-			break;
-		
-		case pauseGame:
-			break;
+	case freeKick:
+		break;
 
-		case continueGame:
-			break;
+	case prePenaltyKick:
+		break;
 
-		case removeRobot:
-			break;
+	case penaltyKick:
+		break;
 
-		case addRobot:
-			break;
+	case pauseGame:
+		break;
+
+	case continueGame:
+		break;
+
+	case removeRobot:
+		break;
+
+	case addRobot:
+		break;
 	}
 
-	vector<char> message(4);
-	float voltage;
-
-	vector<float> setPoint;
-	vector<float> goal = { -4.5, 0 , 0 };
-
-	float ballAngle;
-	float goalAngle;
-	/*
-	if (playerList[0]->ballPos[1] > 0.1)
-		kick = true;
-
-	if (kick)
+	for (auto player : playerList)
 	{
-		if (((playerList[0]->ballPos[0] - playerList[0]->playerPos[0]) * (playerList[0]->ballPos[0] - playerList[0]->playerPos[0]) +
-			(playerList[0]->ballPos[2] - playerList[0]->playerPos[2]) * (playerList[0]->ballPos[2] - playerList[0]->playerPos[2])) >= MIN_DISTANCE)
-		{
-			playerState = goingToBall;
-		}
-		else
-			playerState = atBall;
+		setInitialPositions();
+		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector2));
+		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
+		player->ballPos = ballPos;
+		player->ballHeight = ballHeight;
+		player->updateState();
 	}
-
-	if (update)
-	{
-		switch (playerState)
-		{
-		case goingToBall:
-			timer = 3;
-			playerList[0]->moveRobotToBall();
-
-			break;
-
-		case atBall:
-
-			timer = 1;
-			voltage = 3;
-			memcpy(&(message[0]), &voltage, sizeof(float));
-			MQTTClient->publish(playerList[0]->robotId + "/dribbler/voltage/set", message);
-
-			setPoint = { playerList[0]->playerPos[0], playerList[0]->playerPos[2], playerList[0]->getSetAngle(goal) };
-
-
-			playerList[0]->moveRobotToSetPoint(setPoint);
-
-			ballAngle = playerList[0]->angleCalculator(playerList[0]->playerPos, playerList[0]->ballPos);
-
-			goalAngle = playerList[0]->angleCalculator(playerList[0]->playerPos, goal);
-
-			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR) && kick)		// calculates the aceptable error to kick
-			{
-				MQTTClient->publish(playerList[0]->robotId  + "/kicker/kick/cmd", message);
-				kick = false;
-			}
-
-			break;
-		}
-		update = false;
-	}
-
-	if (timer <= 0)
-	{
-		update = true;
-	}
-	if (timer > 0)
-		timer--;*/
 }
 
-
 /**
- * @brief 
- * 
- * @param topic 
- * @param payload 
+ * @brief
+ *
+ * @param topic
+ * @param payload
  */
 void GameController::recieveInformation(string topic, vector<char> payload)
 {
-	if (topic == (playerList[0]->robotId + "/motion/state"))
+	for (uint8_t i = 0; i < teamSize; i++)
 	{
-		for (int j = 0; j < 3; j++)
-		{
-			memcpy(&(playerList[0]->playerPos[j]), &(payload[j * sizeof(float)]), sizeof(float));
-		}
+		Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
+		if (topic == (playerList[i]->robotId + "/motion/state"))
+			playerList[i]->playerPos = teamPos[i] = aux;
+		else if (topic == ("robot2." + to_string(i) + "/motion/state"))
+			enemyPos[i] = aux;
 	}
 	if (topic == "ball/motion/state")
 	{
 		if (lastPayload != payload)
 		{
-			for (int i = 0; i < 3; i++)
-			{
-				float aux = playerList[0]->ballPos[i];
-				memcpy(&(playerList[0]->ballPos[i]) , &(payload[i * sizeof(float)]), sizeof(float));
-			}
+			ballPos = ballPos = {*((float *)&payload[0]), *((float *)&payload[8])};
+			ballHeight = *((float *)&payload[4]);
 			lastPayload = payload;
 		}
 	}
-	if (topic == "edacup/preKickOff")
+	else if (topic == "edacup/preKickOff")
 	{
 		std::cout << "preKickOFF" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = preKickOff;
 	}
-	if (topic == "edacup/kickOff")
+	else if (topic == "edacup/kickOff")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = kickOff;
 	}
-	if (topic == "edacup/preFreeKick")
+	else if (topic == "edacup/preFreeKick")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = preFreeKick;
 	}
-	if (topic == "edacup/freeKick")
+	else if (topic == "edacup/freeKick")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = freeKick;
 	}
-	if (topic == "edacup/prePenaltyKick")
+	else if (topic == "edacup/prePenaltyKick")
 	{
 		std::cout << "prePenaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = prePenaltyKick;
 	}
-	if (topic == "edacup/penaltyKick")
+	else if (topic == "edacup/penaltyKick")
 	{
 		std::cout << "penaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 		gameState = penaltyKick;
 	}
-	if (topic == "edacup/pause")
+	else if (topic == "edacup/pause")
 	{
 		gameState = pauseGame;
 	}
-	if (topic == "edacup/continue")
+	else if (topic == "edacup/continue")
 	{
 		gameState = continueGame;
 	}
-	if (topic == "edacup/removeRobot")
+	else if (topic == "edacup/removeRobot")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 
-		if(teamMessageRefersTo == playerList[0]->teamNum)
+		if (teamMessageRefersTo == playerList[0]->teamNum)
 		{
 			gameState = removeRobot;
 		}
 	}
-	if (topic == "edacup/addRobot")
+	else if (topic == "edacup/addRobot")
 	{
-		memcpy(&teamMessageRefersTo , &payload , sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
 
-		if(teamMessageRefersTo == playerList[0]->teamNum)
+		if (teamMessageRefersTo == playerList[0]->teamNum)
 		{
 			gameState = addRobot;
 		}
 	}
 }
 
-
-void GameController::setInitialPlayerPositions()
+void GameController::setInitialPositions()
 {
-	vector<float> destinationPoint(3);
-	if(teamMessageRefersTo != teamNumber)
+	if (teamMessageRefersTo != teamNumber)
+		playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
+	else
 	{
-		destinationPoint[0] = -1;
-		destinationPoint[2] = 0;
-		playerList[0]->setInitialPosition(destinationPoint);
 	}
-	destinationPoint[0] = -2;
-	destinationPoint[2] = 1;
-	playerList[1]->setInitialPosition(destinationPoint);
-	destinationPoint[2] = -1; 
-	playerList[2]->setInitialPosition(destinationPoint);
-	destinationPoint[0] = -3.5;
-	destinationPoint[2] = 2;
-	playerList[3]->setInitialPosition(destinationPoint);
-	destinationPoint[2] = 0;
-	playerList[4]->setInitialPosition(destinationPoint);
-	destinationPoint[2] = -2;
-	playerList[5]->setInitialPosition(destinationPoint);
+
+	// const Vector2 positions[] = {{-2, 1}, {-2, -1}, {-3.5, 2}, {-3.5, 0}, {-3.5, -2}};
+	// for (uint8_t i = 1; i < teamSize; i++)
+	// 	playerList[i]->moveToSetpoint(playerList[i]->getSetpoint(positions[i]));
+
+	playerList[1]->moveToSetpoint(playerList[0]->getSetpoint({-2, 1}));
+	playerList[2]->moveToSetpoint(playerList[0]->getSetpoint({-2, -1}));
+	playerList[3]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, 2}));
+	playerList[4]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, 0}));
+	playerList[5]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, -2}));
 }

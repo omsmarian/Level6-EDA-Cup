@@ -59,7 +59,8 @@ private:
 	float ballHeight;
 	array<Vector2, 6> teamPos, enemyPos;
 
-	int gameState, teamMessageRefersTo, teamNumber, teamSize = 6;
+	int gameState, teamNumber, teamSize = 6;
+	uint8_t teamMessageRefersTo;
 	bool update = false, enemyHasBall = false;
 };
 

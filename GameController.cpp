@@ -25,7 +25,7 @@ using namespace std;
  * and set the display
  * @param mqtt the player to be controlled
  */
-GameController::GameController(MQTTClient2 *mqtt, vector<Player *> auxList)
+GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
 {
 	MQTTClient = mqtt;
 	for (int i = 5; i >= 0; i--)
@@ -90,13 +90,14 @@ void GameController::onMessage(string topic, vector<char> payload)
 		break;
 	}
 
+	setInitialPositions();
 	for (auto player : playerList)
 	{
-		setInitialPositions();
 		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector2));
 		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
+		//player->playerState = Still;
 		player->updateState();
 	}
 }
@@ -111,52 +112,58 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 {
 	for (uint8_t i = 0; i < teamSize; i++)
 	{
-		Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
 		if (topic == (playerList[i]->robotId + "/motion/state"))
+		{
+			Vector2 aux = { *((float*)&payload[0]), *((float*)&payload[8]) };
 			playerList[i]->playerPos = teamPos[i] = aux;
+		}
 		else if (topic == ("robot2." + to_string(i) + "/motion/state"))
+		{
+			Vector2 aux = { *((float*)&payload[0]), *((float*)&payload[8]) };
 			enemyPos[i] = aux;
+		}
 	}
 	if (topic == "ball/motion/state")
 	{
 		if (lastPayload != payload)
 		{
-			ballPos = ballPos = {*((float *)&payload[0]), *((float *)&payload[8])};
-			ballHeight = *((float *)&payload[4]);
+			ballPos = { *((float*)&payload[0]), *((float*)&payload[8]) };
+			ballHeight = *((float*)&payload[4]);
 			lastPayload = payload;
 		}
 	}
 	else if (topic == "edacup/preKickOff")
 	{
-		std::cout << "preKickOFF" << std::endl;
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		cout << "preKickOFF" << endl;
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = preKickOff;
 	}
 	else if (topic == "edacup/kickOff")
 	{
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = kickOff;
 	}
 	else if (topic == "edacup/preFreeKick")
 	{
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		cout << "preFreeKick" << endl;
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = preFreeKick;
 	}
 	else if (topic == "edacup/freeKick")
 	{
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = freeKick;
 	}
 	else if (topic == "edacup/prePenaltyKick")
 	{
-		std::cout << "prePenaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		cout << "prePenaltyKick" << endl;
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = prePenaltyKick;
 	}
 	else if (topic == "edacup/penaltyKick")
 	{
-		std::cout << "penaltyKick" << std::endl;
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		cout << "penaltyKick" << endl;
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = penaltyKick;
 	}
 	else if (topic == "edacup/pause")
@@ -169,7 +176,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/removeRobot")
 	{
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 
 		if (teamMessageRefersTo == playerList[0]->teamNum)
 		{
@@ -178,7 +185,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/addRobot")
 	{
-		memcpy(&teamMessageRefersTo, &payload, sizeof(uint8_t));
+		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 
 		if (teamMessageRefersTo == playerList[0]->teamNum)
 		{
@@ -189,19 +196,10 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPositions()
 {
-	if (teamMessageRefersTo != teamNumber)
-		playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
-	else
-	{
-	}
-
-	// const Vector2 positions[] = {{-2, 1}, {-2, -1}, {-3.5, 2}, {-3.5, 0}, {-3.5, -2}};
-	// for (uint8_t i = 1; i < teamSize; i++)
-	// 	playerList[i]->moveToSetpoint(playerList[i]->getSetpoint(positions[i]));
-
-	playerList[1]->moveToSetpoint(playerList[0]->getSetpoint({-2, 1}));
-	playerList[2]->moveToSetpoint(playerList[0]->getSetpoint({-2, -1}));
-	playerList[3]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, 2}));
-	playerList[4]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, 0}));
-	playerList[5]->moveToSetpoint(playerList[0]->getSetpoint({-3.5, -2}));
+	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({ -1, 0 }));
+	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({ -2, 1 }));
+	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({ -2, -1 }));
+	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({ -3.5, 2 }));
+	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({ -3.5, 0 }));
+	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({ -3.5, -2 }));
 }

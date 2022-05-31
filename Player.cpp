@@ -29,7 +29,7 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 
 	this->MQTTClient = &MQTTClient;
 
-	image = LoadImage("../Images/image.png");
+	image = LoadImage("../../../Images/image.png");
 	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
 
 	Rectangle selectRectangle = {16.0F * (stoi(robotIndex) - 1), 0, 16, 16};

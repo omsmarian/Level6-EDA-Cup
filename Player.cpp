@@ -10,6 +10,7 @@ using namespace std;
 #define MINIMAL_ERROR 10
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 1
+#define MAC
 
 const Vector2 goal = {-4.5, 0};
 
@@ -26,10 +27,12 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 		robotId = "robot2." + robotIndex;
 	}
 	cout << robotId << endl;
-
 	this->MQTTClient = &MQTTClient;
 
-	image = LoadImage("../../../Images/image.png");
+	#ifdef MAC
+	image = LoadImage("../Images/image.png");
+	#endif
+
 	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
 
 	Rectangle selectRectangle = {16.0F * (stoi(robotIndex) - 1), 0, 16, 16};

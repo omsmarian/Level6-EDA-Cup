@@ -47,8 +47,8 @@ int main(int argc, char *argv[])
 	MQTTClient.setListener(&listener);
 
 	MQTTClient.subscribe("ball/motion/state");
-	for (uint8_t i = 0; i < 2; i++)
-		for (uint8_t j = 0; j < 6; j++)
+	for (uint8_t i = 1; i < 3; i++)
+		for (uint8_t j = 1; j < 7; j++)
 			MQTTClient.subscribe("robot" + to_string(i) + "." + to_string(j) + "/motion/state");
 	MQTTClient.subscribe("edacup/preKickOff");
 	MQTTClient.subscribe("edacup/kickOff");

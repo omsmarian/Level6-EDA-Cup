@@ -58,39 +58,49 @@ void GameController::onMessage(string topic, vector<char> payload)
 	switch (gameState)
 	{
 	case preKickOff:
+	{
 		setInitialPositions();
-		playerList[0]->moveToBall();
-		break;
-
-	case kickOff:
-		break;
-
-	case preFreeKick:
-		break;
-
-	case freeKick:
-		break;
-
-	case prePenaltyKick:
-		break;
-
-	case penaltyKick:
-		break;
-
-	case pauseGame:
-		break;
-
-	case continueGame:
-		break;
-
-	case removeRobot:
-		break;
-
-	case addRobot:
 		break;
 	}
+	case kickOff:
+	{
+		playerList[0]->moveToBall();
+		break;
+	}
+	case preFreeKick:
+	{
+		break;
+	}
+	case freeKick:
+	{
+		break;
+	}
+	case prePenaltyKick:
+	{
+		break;
+	}
+	case penaltyKick:
+	{
+		break;
+	}
+	case pauseGame:
+	{
+		break;
+	}
+	case continueGame:
+	{
+		break;
+	}
+	case removeRobot:
+	{
+		break;
+	}
+	case addRobot:
+	{
+		break;
+	}
+	}
 
-	setInitialPositions();
 	for (auto player : playerList)
 	{
 		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector2));

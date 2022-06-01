@@ -46,6 +46,7 @@ public:
 private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
+	bool isEnemyWithBall();
 
 	uint8_t timer;
 	// Image image;
@@ -59,7 +60,7 @@ private:
 	float ballHeight;
 	array<Vector2, 6> teamPos, enemyPos;
 
-	int gameState, teamNumber, teamSize = 6;
+	int gameState, teamState, teamNumber, teamSize = 6;
 	uint8_t teamMessageRefersTo;
 	bool update = false, enemyHasBall = false;
 };

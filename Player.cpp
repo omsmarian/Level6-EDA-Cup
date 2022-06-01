@@ -53,6 +53,8 @@ void Player::updateState()
 {
 	if (update)
 	{
+		if (teamState == Attacking)
+		{
 		switch (playerState)
 		{
 		case GoingToBall:
@@ -146,19 +148,10 @@ void Player::updateState()
 
 			break;
 		}
-		case Defending:
-		{
-			// moveToSetpoint(getSetpoint(Vector2MoveTowards(enemyPos[...])));
-
-			break;
-		}
-		case Still:
-		{
-			// Do nothing
-
-			break;
 		}
 		}
+		else
+		{}
 		update = false;
 	}
 
@@ -223,7 +216,7 @@ void Player::remove()
 
 float Player::getKickerPower(Vector2 destination)
 {
-	return 0.25 + 0.225 * logf(1.225 * Vector2Distance(playerPos, destination));
+	return min(0.25 + 0.225 * logf(1.225 * Vector2Distance(playerPos, destination)), 0.8);
 	// return -0.0127 + 0.286 * distance - 0.0455 * pow(distance, 2) + 0.00306 * pow(distance, 3);
 }
 
@@ -276,13 +269,4 @@ bool Player::isPassPossible(Vector2 friendPos) // should consider enemy movement
 		if (CheckCollisionCircleLine(enemyPos, ROBOT_RADIUS, playerPos, friendPos))
 			return false;
 	return true;
-}
-
-bool Player::isEnemyWithBall()
-{
-	for (auto enemy : enemyPos)
-		if (Vector2Distance(enemy, ballPos) <= ROBOT_RADIUS + MIN_DISTANCE)
-			// enemyHasBall = true;
-			return true;
-	return false;
 }

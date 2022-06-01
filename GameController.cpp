@@ -64,7 +64,13 @@ void GameController::onMessage(string topic, vector<char> payload)
 	}
 	case kickOff:
 	{
-		playerList[0]->moveToBall();
+		if(isEnemyWithBall())
+			for (auto player : playerList)
+				player->teamState = Defending;
+		else
+			for (auto player : playerList)
+				player->teamState = Attacking;
+
 		break;
 	}
 	case preFreeKick:
@@ -107,7 +113,6 @@ void GameController::onMessage(string topic, vector<char> payload)
 		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
-		//player->playerState = Still;
 		player->updateState();
 	}
 }
@@ -206,10 +211,19 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPositions()
 {
-	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({ -1, 0 }));
+	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({ 4.5, 0 }));
 	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({ -2, 1 }));
 	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({ -2, -1 }));
 	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({ -3.5, 2 }));
 	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({ -3.5, 0 }));
 	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({ -3.5, -2 }));
+}
+
+bool GameController::isEnemyWithBall()
+{
+	for (auto enemy : enemyPos)
+		if (Vector2Distance(enemy, ballPos) <= ROBOT_RADIUS + MIN_DISTANCE)
+			// enemyHasBall = true;
+			return true;
+	return false;
 }

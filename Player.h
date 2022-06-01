@@ -14,8 +14,13 @@ enum PlayerState
 	PassingBall,
 	KickingBall,
 	Free,
+};
+
+enum TeamState
+{
+	Attacking,
 	Defending,
-	Still
+	Nothing
 };
 
 const float ROBOT_RADIUS = 0.09;
@@ -39,7 +44,6 @@ public:
 	bool isPassPossible(Vector2 friendPos);
 	bool isGoalPossible();
 	void findNextPos();
-	bool isEnemyWithBall();
 
 	Vector2 playerPos, ballPos, dribblingStartPos, nextPos;
 	float ballHeight;
@@ -47,7 +51,7 @@ public:
 	int teamNum;
 
 	bool kick, enemyHasBall, passIsPossible;
-	uint8_t playerState = Still, playerWithBall, nextPlayer;
+	uint8_t playerState, teamState, playerWithBall, nextPlayer;
 	array<Vector2, 6> teamPos, enemyPos;
 
 private:

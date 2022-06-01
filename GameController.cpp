@@ -213,3 +213,51 @@ void GameController::setInitialPositions()
 	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({ -3.5, 0 }));
 	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({ -3.5, -2 }));
 }
+
+
+GridWithWeights GameController::makeHeatMap() {
+  GridWithWeights grid(90, 60);
+  typedef GridLocation L;
+
+  grid.forests.emplace(L{1,0,3});     // construye un "nodo" con el peso correspondiente en el set
+  
+  return grid;
+}
+
+
+GridLocation GameController::assignWeightToHeatMapLocation(vector<float> actualPosition)
+{
+	// vos le pasas una posicion y te fijas si esta cerca de un robot, te fijas cuan cerca esta
+	// y le asignas el peso correspondiente
+}
+
+
+GridLocation GameController::actualPositionToHeatMapPosition(vector<float> actualPosition)
+{
+    vector<int> auxActualPosition(2);
+
+
+    auxActualPosition[0] = actualPosition[0]*10 + 45;
+    auxActualPosition[1] = -(actualPosition[1]*10 - 30);
+
+
+    if(auxActualPosition[0] == 90)
+    {
+        auxActualPosition[0] -= 1;
+    }
+    if(auxActualPosition[1] == 60)
+    {
+        auxActualPosition[1] -= 1;
+    }
+
+	GridLocation heatMapPosition = {auxActualPosition[0], auxActualPosition[1]};
+	
+    return heatMapPosition;
+}
+
+
+vector<float> GameController::heatMapPositionToActualPosition(GridLocation heatMapLocation)
+{
+
+}
+

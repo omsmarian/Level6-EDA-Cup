@@ -6,6 +6,7 @@
  License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
 */
 
+#include "AStar.h"
 #include <iostream>
 #include <iomanip>
 #include <unordered_map>
@@ -17,6 +18,8 @@
 #include <tuple>
 #include <algorithm>
 #include <cstdlib>
+
+using namespace std;
 
 struct SimpleGraph {
   std::unordered_map<char, std::vector<char> > edges;
@@ -31,22 +34,23 @@ struct GridLocation {
   int weight;
 };
 
+
 namespace std {
 /* implement hash function so  can put GridLocation into an unordered_set */
 template <> struct hash<GridLocation> {
-  std::size_t operator()(const GridLocation& id) const noexcept {
+  size_t operator()(const GridLocation& id) const noexcept {
     // NOTE: better to use something like boost hash_combine
-    return std::hash<int>()(id.x ^ (id.y << 16));
+    return hash<int>()(id.x ^ (id.y << 16));
   }
 };
 }
 
 
 struct SquareGrid {
-  static std::array<GridLocation, 4> DIRS;
+  static array<GridLocation, 4> DIRS;
 
   int width, height;
-  std::unordered_set<GridLocation> walls;
+  unordered_set<GridLocation> walls;
 
   SquareGrid(int width_, int height_)
      : width(width_), height(height_) {}
@@ -60,8 +64,8 @@ struct SquareGrid {
     return walls.find(id) == walls.end();
   }
 
-  std::vector<GridLocation> neighbors(GridLocation id) const {
-    std::vector<GridLocation> results;
+  vector<GridLocation> neighbors(GridLocation id) const {
+    vector<GridLocation> results;
 
     for (GridLocation dir : DIRS) {
       GridLocation next{id.x + dir.x, id.y + dir.y};
@@ -72,14 +76,14 @@ struct SquareGrid {
 
     if ((id.x + id.y) % 2 == 0) {
       // see "Ugly paths" section for an explanation:
-      std::reverse(results.begin(), results.end());
+      reverse(results.begin(), results.end());
     }
 
     return results;
   }
 };
 
-std::array<GridLocation, 4> SquareGrid::DIRS = {
+array<GridLocation, 4> SquareGrid::DIRS = {
   /* East, West, North, South */
   GridLocation{1, 0}, GridLocation{-1, 0},
   GridLocation{0, -1}, GridLocation{0, 1}
@@ -96,10 +100,10 @@ bool operator != (GridLocation a, GridLocation b) {
 }
 
 bool operator < (GridLocation a, GridLocation b) {
-  return std::tie(a.x, a.y) < std::tie(b.x, b.y);
+  return tie(a.x, a.y) < tie(b.x, b.y);
 }
 
-std::basic_iostream<char>::basic_ostream& operator<<(std::basic_iostream<char>::basic_ostream& out, const GridLocation& loc) {
+basic_iostream<char>::basic_ostream& operator<<(basic_iostream<char>::basic_ostream& out, const GridLocation& loc) {
   out << '(' << loc.x << ',' << loc.y << ')';
   return out;
 }
@@ -110,40 +114,40 @@ std::basic_iostream<char>::basic_ostream& operator<<(std::basic_iostream<char>::
 // if you want to draw the path.
 template<class Graph>
 void draw_grid(const Graph& graph,
-               std::unordered_map<GridLocation, double>* distances=nullptr,
-               std::unordered_map<GridLocation, GridLocation>* point_to=nullptr,
-               std::vector<GridLocation>* path=nullptr,
+               unordered_map<GridLocation, double>* distances=nullptr,
+               unordered_map<GridLocation, GridLocation>* point_to=nullptr,
+               vector<GridLocation>* path=nullptr,
                GridLocation* start=nullptr,
                GridLocation* goal=nullptr) {
   const int field_width = 3;
-  std::cout << std::string(field_width * graph.width, '_') << '\n';
+  cout << string(field_width * graph.width, '_') << '\n';
   for (int y = 0; y != graph.height; ++y) {
     for (int x = 0; x != graph.width; ++x) {
       GridLocation id {x, y};
       if (graph.walls.find(id) != graph.walls.end()) {
-        std::cout << std::string(field_width, '#');
+        cout << string(field_width, '#');
       } else if (start && id == *start) {
-        std::cout << " A ";
+        cout << " A ";
       } else if (goal && id == *goal) {
-        std::cout << " Z ";
+        cout << " Z ";
       } else if (path != nullptr && find(path->begin(), path->end(), id) != path->end()) {
-        std::cout << " @ ";
+        cout << " @ ";
       } else if (point_to != nullptr && point_to->count(id)) {
         GridLocation next = (*point_to)[id];
-        if (next.x == x + 1) { std::cout << " > "; }
-        else if (next.x == x - 1) { std::cout << " < "; }
-        else if (next.y == y + 1) { std::cout << " v "; }
-        else if (next.y == y - 1) { std::cout << " ^ "; }
-        else { std::cout << " * "; }
+        if (next.x == x + 1) { cout << " > "; }
+        else if (next.x == x - 1) { cout << " < "; }
+        else if (next.y == y + 1) { cout << " v "; }
+        else if (next.y == y - 1) { cout << " ^ "; }
+        else { cout << " * "; }
       } else if (distances != nullptr && distances->count(id)) {
-        std::cout << ' ' << std::left << std::setw(field_width - 1) << (*distances)[id];
+        cout << ' ' << left << setw(field_width - 1) << (*distances)[id];
       } else {
-        std::cout << " . ";
+        cout << " . ";
       }
     }
-    std::cout << '\n';
+    cout << '\n';
   }
-  std::cout << std::string(field_width * graph.width, '~') << '\n';
+  cout << string(field_width * graph.width, '~') << '\n';
 }
 
 void add_rect(SquareGrid& grid, int x1, int y1, int x2, int y2) {
@@ -156,7 +160,7 @@ void add_rect(SquareGrid& grid, int x1, int y1, int x2, int y2) {
 
 
 struct GridWithWeights: SquareGrid {
-  std::unordered_set<GridLocation> forests;
+  unordered_set<GridLocation> forests;
   GridWithWeights(int w, int h): SquareGrid(w, h) {}
   double cost(GridLocation from_node, GridLocation to_node) {
     return forests.find(to_node) != forests.end()? forests.find(to_node)->weight : 1;
@@ -164,18 +168,12 @@ struct GridWithWeights: SquareGrid {
 
 };
 
-GridWithWeights make_diagram() {
-  GridWithWeights grid(90, 60);
-  typedef GridLocation L;
-  grid.forests.emplace(L{1,0,3});
-  return grid;
-}
 
 template<typename T, typename priority_t>
 struct PriorityQueue {
-  typedef std::pair<priority_t, T> PQElement;
-  std::priority_queue<PQElement, std::vector<PQElement>,
-                 std::greater<PQElement>> elements;
+  typedef pair<priority_t, T> PQElement;
+  priority_queue<PQElement, vector<PQElement>,
+                 greater<PQElement>> elements;
 
   inline bool empty() const {
      return elements.empty();
@@ -193,23 +191,23 @@ struct PriorityQueue {
 };
 
 template<typename Location>
-std::vector<Location> reconstruct_path(
+   vector<Location> reconstruct_path(
    Location start, Location goal,
-   std::unordered_map<Location, Location> came_from
+   unordered_map<Location, Location> came_from
 ) {
-  std::vector<Location> path;
+  vector<Location> path;
   Location current = goal;
   while (current != start) {  // note: this will fail if no path found
     path.push_back(current);
     current = came_from[current];
   }
   path.push_back(start); // optional
-  std::reverse(path.begin(), path.end());
+  reverse(path.begin(), path.end());
   return path;
 }
 
 inline double heuristic(GridLocation a, GridLocation b) {
-  return std::abs(a.x - b.x) + std::abs(a.y - b.y);
+  return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
 template<typename Location, typename Graph>
@@ -217,8 +215,8 @@ void a_star_search
   (Graph graph,
    Location start,
    Location goal,
-   std::unordered_map<Location, Location>& came_from,
-   std::unordered_map<Location, double>& cost_so_far)
+   unordered_map<Location, Location>& came_from,
+   unordered_map<Location, double>& cost_so_far)
 {
   PriorityQueue<Location, double> frontier;
   frontier.put(start, 0);

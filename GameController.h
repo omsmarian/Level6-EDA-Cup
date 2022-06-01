@@ -18,6 +18,7 @@
 #include <raymath.h>
 #include <vector>
 #include <array>
+#include "Astar.cpp"
 
 using namespace std;
 
@@ -46,6 +47,10 @@ public:
 private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
+	GridWithWeights makeHeatMap();
+	GridLocation actualPositionToHeatMapPosition(vector<float> actualPosition);
+	GridLocation assignWeightToHeatMapLocation(vector<float> actualPosition);
+	vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation);
 
 	uint8_t timer;
 	// Image image;

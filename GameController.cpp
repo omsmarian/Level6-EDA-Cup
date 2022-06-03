@@ -9,8 +9,10 @@
  */
 
 #include "GameController.h"
+#include "AStar.cpp"
 #include <iostream>
 #include <cstring>
+
 
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
@@ -217,90 +219,32 @@ void GameController::setInitialPositions()
 }
 
 
-GridWithWeights makeHeatMap()
+
+GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition)
 {
-	// vos le pasas una posicion y te fijas si esta cerca de un robot, te fijas cuan cerca esta
-	// y le asignas el peso correspondiente
+	Vector2 auxHeatmapPosition;
 
-	GridWithWeights grid(20, 20);
-	GridLocation heatMapPosition;
-	heatMapPosition.x = 5;
-	heatMapPosition.y = 5;
-	heatMapPosition.weight = WEIGHT;
-	grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y, heatMapPosition.weight});
-	for (int i = 1; i < WEIGHT; i++)
+	auxHeatmapPosition.x = actualPosition.x * 10 + 45;
+	auxHeatmapPosition.y = -(actualPosition.y * 10 - 30);
+
+	if (auxHeatmapPosition.x == 90)
 	{
-		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y - i, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y + i, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - i, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + i, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - i, WEIGHT - i});
-		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + i, WEIGHT - i});
-		if (i == 2)
-		{
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + 1, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - 1, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - 1, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + 1, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y + i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y + i, WEIGHT - i});
-		}
-		if (i == 3)
-		{
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 1), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 2), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y + i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y + i, WEIGHT - i});
-
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 1), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 2), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y + i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y + i, WEIGHT - i});
-
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 1), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 2), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y - i, WEIGHT - i});
-
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 1), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 2), WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y - i, WEIGHT - i});
-		}
+		auxHeatmapPosition.x -= 1;
 	}
-	return grid;
-}
-
-
-GridLocation GameController::actualPositionToHeatMapPosition(vector<float> actualPosition)
-{
-	vector<int> auxHeatmapPosition(2);
-
-	auxHeatmapPosition[0] = actualPosition[0] * 10 + 45;
-	auxHeatmapPosition[1] = -(actualPosition[1] * 10 - 30);
-
-	if (auxHeatmapPosition[0] == 90)
+	if (auxHeatmapPosition.y == 60)
 	{
-		auxHeatmapPosition[0] -= 1;
-	}
-	if (auxHeatmapPosition[1] == 60)
-	{
-		auxHeatmapPosition[1] -= 1;
+		auxHeatmapPosition.y -= 1;
 	}
 
-	GridLocation heatMapPosition = {auxHeatmapPosition[0], auxHeatmapPosition[1]};
+	GridLocation heatMapPosition = {(int)auxHeatmapPosition.x,(int) auxHeatmapPosition.y};
 
 	return heatMapPosition;
 }
 
 
-vector<float> GameController::heatMapPositionToActualPosition(GridLocation heatMapLocation)
+Vector2 heatMapPositionToActualPosition(GridLocation heatMapLocation)
 {
-	vector<float> actualPosition(2);
+	Vector2 actualPosition;
 
 	if (heatMapLocation.x == 89)
 	{
@@ -311,8 +255,66 @@ vector<float> GameController::heatMapPositionToActualPosition(GridLocation heatM
 		heatMapLocation.y += 1;
 	}
 
-	actualPosition[0] = ((float)(heatMapLocation.y) - 45.0f) / 10.0f;
-	actualPosition[1] = (-(float)(heatMapLocation.x) + 30.0f) / 10.0f;
+	actualPosition.x = ((float)(heatMapLocation.y) - 45.0f) / 10.0f;
+	actualPosition.y = (-(float)(heatMapLocation.x) + 30.0f) / 10.0f;
 
 	return actualPosition;
 }
+
+GridWithWeights makeHeatMap(vector<Player*> playerList)
+{
+	GridWithWeights grid(20, 20);
+	for(auto player : playerList)
+	{
+		GridLocation heatMapPosition = actualPositionToHeatMapPosition(player->playerPos);	
+		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y, heatMapPosition.weight});
+		for (int i = 1; i < WEIGHT; i++)
+		{
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + i, WEIGHT - i});
+			if (i == 2)
+			{
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + 1, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - 1, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - 1, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + 1, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y - i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y - i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y + i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y + i, WEIGHT - i});
+			}
+			if (i == 3)
+			{
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 1), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 2), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y + i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 1), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 2), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y + i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 1), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 2), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y - i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y - i, WEIGHT - i});
+
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 1), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 2), WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y - i, WEIGHT - i});
+				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y - i, WEIGHT - i});
+			}
+		}
+	}
+	return grid;
+}
+
+
+

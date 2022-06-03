@@ -7,19 +7,8 @@
 */
 
 #include "AStar.h"
-#include <iostream>
-#include <iomanip>
-#include <unordered_map>
-#include <unordered_set>
-#include <array>
-#include <vector>
-#include <utility>
-#include <queue>
-#include <tuple>
-#include <algorithm>
-#include <cstdlib>
 
-using namespace std;
+
 
 struct SimpleGraph {
   std::unordered_map<char, std::vector<char> > edges;
@@ -29,66 +18,14 @@ struct SimpleGraph {
   }
 };
 
-struct GridLocation {
-  int x, y;
-  int weight;
-};
 
-
-namespace std {
-/* implement hash function so  can put GridLocation into an unordered_set */
-template <> struct hash<GridLocation> {
-  size_t operator()(const GridLocation& id) const noexcept {
-    // NOTE: better to use something like boost hash_combine
-    return hash<int>()(id.x ^ (id.y << 16));
-  }
-};
-}
-
-
-struct SquareGrid {
-  static array<GridLocation, 4> DIRS;
-
-  int width, height;
-  unordered_set<GridLocation> walls;
-
-  SquareGrid(int width_, int height_)
-     : width(width_), height(height_) {}
-
-  bool in_bounds(GridLocation id) const {
-    return 0 <= id.x && id.x < width
-        && 0 <= id.y && id.y < height;
-  }
-
-  bool passable(GridLocation id) const {
-    return walls.find(id) == walls.end();
-  }
-
-  vector<GridLocation> neighbors(GridLocation id) const {
-    vector<GridLocation> results;
-
-    for (GridLocation dir : DIRS) {
-      GridLocation next{id.x + dir.x, id.y + dir.y};
-      if (in_bounds(next) && passable(next)) {
-        results.push_back(next);
-      }
-    }
-
-    if ((id.x + id.y) % 2 == 0) {
-      // see "Ugly paths" section for an explanation:
-      reverse(results.begin(), results.end());
-    }
-
-    return results;
-  }
-};
-
-array<GridLocation, 4> SquareGrid::DIRS = {
+std::array<GridLocation, 8> SquareGrid::DIRS = {
   /* East, West, North, South */
   GridLocation{1, 0}, GridLocation{-1, 0},
-  GridLocation{0, -1}, GridLocation{0, 1}
+  GridLocation{0, -1}, GridLocation{0, 1},
+  GridLocation{-1, 1}, GridLocation{1, 1},
+  GridLocation{-1, -1}, GridLocation{1, -1}
 };
-
 // Helpers for GridLocation
 
 bool operator == (GridLocation a, GridLocation b) {
@@ -157,16 +94,6 @@ void add_rect(SquareGrid& grid, int x1, int y1, int x2, int y2) {
     }
   }
 }
-
-
-struct GridWithWeights: SquareGrid {
-  unordered_set<GridLocation> forests;
-  GridWithWeights(int w, int h): SquareGrid(w, h) {}
-  double cost(GridLocation from_node, GridLocation to_node) {
-    return forests.find(to_node) != forests.end()? forests.find(to_node)->weight : 1;
-  }
-
-};
 
 
 template<typename T, typename priority_t>

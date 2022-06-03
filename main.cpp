@@ -23,8 +23,17 @@ int main(int argc, char *argv[])
 
 	MQTTClient.connect("controller", "127.0.0.1", 1883, "user", "vdivEMMN3SQWX2Ez");
 
-	// char teamNumber = *argv[1];
+	//char teamNumber = *argv[1];
 	char teamNumber = '1';
+	char enemyTeamNumber;
+	if(teamNumber == '1')
+	{
+		char enemyTeamNumber = '2';
+	}
+	else
+	{
+		char enemyTeamNumber = '1';
+	}
 
 	Player robot1("1", teamNumber, MQTTClient);
 	Player robot2("2", teamNumber, MQTTClient);
@@ -32,10 +41,23 @@ int main(int argc, char *argv[])
 	Player robot4("4", teamNumber, MQTTClient);
 	Player robot5("5", teamNumber, MQTTClient);
 	Player robot6("6", teamNumber, MQTTClient);
+	Player robot7("1", enemyTeamNumber, MQTTClient);
+	Player robot8("2", enemyTeamNumber, MQTTClient);
+	Player robot9("3", enemyTeamNumber, MQTTClient);
+	Player robot10("4", enemyTeamNumber, MQTTClient);
+	Player robot11("5", enemyTeamNumber, MQTTClient);
+	Player robot12("6", enemyTeamNumber, MQTTClient);
+
 
 	vector<Player *> playerList;
 	// vector<Player *> playerList = {&robot1, &robot2, &robot3, &robot4, &robot5, &robot6};
 
+	playerList.push_back(&robot12);
+	playerList.push_back(&robot11);
+	playerList.push_back(&robot10);
+	playerList.push_back(&robot9);
+	playerList.push_back(&robot8);
+	playerList.push_back(&robot7);
 	playerList.push_back(&robot6);
 	playerList.push_back(&robot5);
 	playerList.push_back(&robot4);

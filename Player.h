@@ -1,3 +1,6 @@
+#ifndef PLAYER_H
+#define PLAYER_H
+
 #include <vector>
 #include <raylib.h>
 #include "MQTTClient2.h"
@@ -56,3 +59,5 @@ private:
 	uint8_t timer = 0;
 	bool update = false;
 };
+
+#endif

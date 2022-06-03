@@ -25,13 +25,14 @@ using namespace std;
  * and set the display
  * @param mqtt the player to be controlled
  */
-GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
+GameController::GameController(MQTTClient2 *mqtt, vector<Player *> playersList)
 {
 	MQTTClient = mqtt;
-	for (int i = 5; i >= 0; i--)
+	for (int i = 11; i >= 0; i--)
 	{
-		playerList.push_back(auxList[i]);
+		playerList.push_back(playersList[i]);
 	}
+
 	update = false;
 	timer = 0;
 	teamNumber = playerList[0]->teamNum;
@@ -44,6 +45,7 @@ GameController::GameController(MQTTClient2* mqtt, vector<Player*> auxList)
  */
 GameController::~GameController()
 {
+
 }
 
 /**
@@ -107,7 +109,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
-		//player->playerState = Still;
+		// player->playerState = Still;
 		player->updateState();
 	}
 }
@@ -124,12 +126,12 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	{
 		if (topic == (playerList[i]->robotId + "/motion/state"))
 		{
-			Vector2 aux = { *((float*)&payload[0]), *((float*)&payload[8]) };
+			Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
 			playerList[i]->playerPos = teamPos[i] = aux;
 		}
 		else if (topic == ("robot2." + to_string(i) + "/motion/state"))
 		{
-			Vector2 aux = { *((float*)&payload[0]), *((float*)&payload[8]) };
+			Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
 			enemyPos[i] = aux;
 		}
 	}
@@ -137,8 +139,8 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	{
 		if (lastPayload != payload)
 		{
-			ballPos = { *((float*)&payload[0]), *((float*)&payload[8]) };
-			ballHeight = *((float*)&payload[4]);
+			ballPos = {*((float *)&payload[0]), *((float *)&payload[8])};
+			ballHeight = *((float *)&payload[4]);
 			lastPayload = payload;
 		}
 	}
@@ -206,58 +208,111 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPositions()
 {
-	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({ -1, 0 }));
-	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({ -2, 1 }));
-	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({ -2, -1 }));
-	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({ -3.5, 2 }));
-	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({ -3.5, 0 }));
-	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({ -3.5, -2 }));
+	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
+	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({-2, 1}));
+	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({-2, -1}));
+	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({-3.5, 2}));
+	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({-3.5, 0}));
+	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({-3.5, -2}));
 }
 
 
-GridWithWeights GameController::makeHeatMap() {
-  GridWithWeights grid(90, 60);
-  typedef GridLocation L;
-
-  grid.forests.emplace(L{1,0,3});     // construye un "nodo" con el peso correspondiente en el set
-  
-  return grid;
-}
-
-
-GridLocation GameController::assignWeightToHeatMapLocation(vector<float> actualPosition)
+GridWithWeights makeHeatMap()
 {
 	// vos le pasas una posicion y te fijas si esta cerca de un robot, te fijas cuan cerca esta
 	// y le asignas el peso correspondiente
+
+	GridWithWeights grid(20, 20);
+	GridLocation heatMapPosition;
+	heatMapPosition.x = 5;
+	heatMapPosition.y = 5;
+	heatMapPosition.weight = WEIGHT;
+	grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y, heatMapPosition.weight});
+	for (int i = 1; i < WEIGHT; i++)
+	{
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y + i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + i, WEIGHT - i});
+		if (i == 2)
+		{
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y + i, WEIGHT - i});
+		}
+		if (i == 3)
+		{
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y - i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y - i, WEIGHT - i});
+		}
+	}
+	return grid;
 }
 
 
 GridLocation GameController::actualPositionToHeatMapPosition(vector<float> actualPosition)
 {
-    vector<int> auxActualPosition(2);
+	vector<int> auxHeatmapPosition(2);
 
+	auxHeatmapPosition[0] = actualPosition[0] * 10 + 45;
+	auxHeatmapPosition[1] = -(actualPosition[1] * 10 - 30);
 
-    auxActualPosition[0] = actualPosition[0]*10 + 45;
-    auxActualPosition[1] = -(actualPosition[1]*10 - 30);
+	if (auxHeatmapPosition[0] == 90)
+	{
+		auxHeatmapPosition[0] -= 1;
+	}
+	if (auxHeatmapPosition[1] == 60)
+	{
+		auxHeatmapPosition[1] -= 1;
+	}
 
+	GridLocation heatMapPosition = {auxHeatmapPosition[0], auxHeatmapPosition[1]};
 
-    if(auxActualPosition[0] == 90)
-    {
-        auxActualPosition[0] -= 1;
-    }
-    if(auxActualPosition[1] == 60)
-    {
-        auxActualPosition[1] -= 1;
-    }
-
-	GridLocation heatMapPosition = {auxActualPosition[0], auxActualPosition[1]};
-	
-    return heatMapPosition;
+	return heatMapPosition;
 }
 
 
 vector<float> GameController::heatMapPositionToActualPosition(GridLocation heatMapLocation)
 {
+	vector<float> actualPosition(2);
 
+	if (heatMapLocation.x == 89)
+	{
+		heatMapLocation.x += 1;
+	}
+	if (heatMapLocation.y == 59)
+	{
+		heatMapLocation.y += 1;
+	}
+
+	actualPosition[0] = ((float)(heatMapLocation.y) - 45.0f) / 10.0f;
+	actualPosition[1] = (-(float)(heatMapLocation.x) + 30.0f) / 10.0f;
+
+	return actualPosition;
 }
-

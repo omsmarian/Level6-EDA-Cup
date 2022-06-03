@@ -28,7 +28,7 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif()
 
-add_executable(edacup main.cpp MQTTClient2.cpp GameController.cpp Player.cpp)
+add_executable(edacup main.cpp MQTTClient2.cpp GameController.cpp Player.cpp AStar.cpp)
 
 # Packages
 find_package(raylib CONFIG REQUIRED)

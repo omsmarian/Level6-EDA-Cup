@@ -43,7 +43,7 @@ template <> struct hash<GridLocation> {
 
 
 struct SquareGrid {
-  static std::array<GridLocation, 4> DIRS;
+  static std::array<GridLocation, 8> DIRS;
 
   int width, height;
   std::unordered_set<GridLocation> walls;
@@ -79,10 +79,12 @@ struct SquareGrid {
   }
 };
 
-std::array<GridLocation, 4> SquareGrid::DIRS = {
+std::array<GridLocation, 8> SquareGrid::DIRS = {
   /* East, West, North, South */
   GridLocation{1, 0}, GridLocation{-1, 0},
-  GridLocation{0, -1}, GridLocation{0, 1}
+  GridLocation{0, -1}, GridLocation{0, 1},
+  GridLocation{-1, 1}, GridLocation{1, 1},
+  GridLocation{-1, -1}, GridLocation{1, -1}
 };
 
 // Helpers for GridLocation

@@ -52,7 +52,7 @@ private:
 	void setInitialPositions();
 
 	uint8_t timer;
-	// Image image;
+	Image image;
 
 	MQTTClient2 *MQTTClient;
 	vector<Player *> playerList;

@@ -11,7 +11,9 @@ using namespace std;
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 1
 
-const Vector2 goal = {-4.5, 0};
+const Vector2 GOAL = {-4.5, 0};
+const float KICK_MAX_POWER = 0.8f;
+const float DRIBBLING_MAX_DISTANCE = 0.9f;
 
 Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 {
@@ -55,107 +57,141 @@ void Player::updateState()
 	{
 		if (teamState == Attacking)
 		{
-		switch (playerState)
-		{
-		case GoingToBall:
-		{
-			timer = 3;
-			moveToBall();
-
-			if (Vector2Distance(playerPos, ballPos) >= MIN_DISTANCE)
-				playerState = GoingToBall;
-			else
-				playerState = AtBall;
-
-			break;
-		}
-		case AtBall:
-		{
-			timer = 1;
-			float voltage = 3;
-			vector<char> message(4);
-			memcpy(&(message[0]), &voltage, sizeof(float));
-			MQTTClient->publish(robotId + "/dribbler/voltage/set", message);
-
-			dribblingStartPos = playerPos;
-
-			if (ballHeight > 0.1)
-				playerState = DribblingBall;
-
-			break;
-		}
-		case DribblingBall:
-		{
-			timer = 1;
-			vector<float> setpoint = {playerPos.x, playerPos.y, getSetAngle(goal)};
-			findNextPos();
-			if (Vector2Distance(playerPos, ballPos) < MIN_DISTANCE)
+			switch (playerState)
 			{
-				if (isGoalPossible())
-					playerState = KickingBall;
-				else if (isPathBlocked(nextPos))
-				{ // setPoint = {..., playerList[0]->getSetAngle(findNextPlayer())};
+			case Free:
+			{
+				if (!isPassPossible(teamPos[nextPlayer]))
+				{
+					// findNextPos();
+				}
+				if (isPlayerClosestTo(ballPos)) // should be findClosestPlayerTo() (but DT...)
+				{
+					playerState = GoingToBall;
+					playerWithBall = playerNum; // playerWithBall shoukd be the same for all!!!
 				}
 				else
-					setpoint = getSetpoint(goal);
+					keepFormation();
+
+				break;
 			}
-			else
-				playerState = GoingToBall;
-
-			moveToSetpoint(setpoint);
-
-			break;
-		}
-		case PassingBall:
-		{
-			findNextPlayer();
-			if (isPassPossible(teamPos[nextPlayer]))
+			case GoingToBall:
 			{
-				// passBall(nextPlayer);
-				playerState = Free;
+				if (playerNum == playerWithBall)
+				{
+					timer = 3;
+					moveToBall();
+
+					if (Vector2Distance(playerPos, ballPos) >= MIN_DISTANCE)
+						playerState = GoingToBall;
+					else
+						playerState = AtBall;
+				}
+				else
+					playerState = Free;
+
+				break;
 			}
-			else
-				playerState = DribblingBall;
-
-			break;
-		}
-		case KickingBall:
-		{
-			float ballAngle = 90.0f - Vector2Angle(playerPos, ballPos);
-			float goalAngle = 90.0f - Vector2Angle(playerPos, goal);
-
-			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR) && kick) // calculates the aceptable error to kick
+			case AtBall:
 			{
-				// voltage = getKickerPower(goal);
-				const float MAX_POWER = 0.8f;
-				float voltage = MAX_POWER;
+				timer = 1;
+				float voltage = 3;
 				vector<char> message(4);
-				*((float *)&message[0]) = voltage;
-				MQTTClient->publish(robotId + "/kicker/kick/cmd", message);
-				// kick = false;
-			}
-			else
-				playerState = DribblingBall;
+				memcpy(&(message[0]), &voltage, sizeof(float));
+				MQTTClient->publish(robotId + "/dribbler/voltage/set", message);
 
-			break;
-		}
-		case Free:
-		{
-			if (!isPassPossible(teamPos[nextPlayer]))
+				dribblingStartPos = playerPos; // won't work (shouldn't use MIN_DISTANCE)
+
+				if (ballHeight > 0.1)
+					playerState = DribblingBall;
+
+				break;
+			}
+			case DribblingBall:
 			{
-				// findNextPos();
-			}
+				timer = 1;
+				vector<float> setpoint = {playerPos.x, playerPos.y, getSetAngle(GOAL)}; // first look for better positioned teammates?
 
-			break;
+				if (getTotalDribblingDistance() < DRIBBLING_MAX_DISTANCE)
+				{
+					findNextPos();
+					if (Vector2Distance(playerPos, ballPos) < MIN_DISTANCE)
+					{
+						if (isPlayerFacingGoal()) // should consider other directions (findNextPos())
+						{
+							if (isGoalPossible()) // ifs order?
+								playerState = KickingBall;
+							else if (isPathBlocked(nextPos))
+							{ // setPoint = {..., playerList[0]->getSetAngle(findNextPlayer())};
+							}
+							else
+								setpoint = getSetpoint(GOAL);
+						}
+						moveToSetpoint(setpoint);
+					}
+					else
+						playerState = GoingToBall;
+				}
+				else
+					playerState = PassingBall; // or go backwards (or maintain radius)
+
+				break;
+			}
+			case PassingBall: // unnecessary?
+			{
+				findNextPlayer();
+				if (isPassPossible(teamPos[nextPlayer]))
+				{
+					// passBall(nextPlayer);
+					// voltage = getKickerPower(nextPlayer);
+					playerState = Free;
+				}
+				else
+					playerState = DribblingBall;
+
+				break;
+			}
+			case KickingBall: // unnecessary?
+			{
+				if (isPlayerFacingGoal()) // asked before
+				{
+					kickBall(KICK_MAX_POWER);
+					playerState = Free;
+				}
+				else
+					playerState = DribblingBall;
+
+				break;
+			}
+			}
 		}
+		else if (teamState == Defending)
+		{
+			switch (playerState)
+			{
+			case Blocking:
+			{
+				// moveToSetpoint(getSetpoint(Vector2MoveTowards(enemyPos[...])));
+
+				break;
+			}
+			}
 		}
+		else // if (teamState == Nothing)
+		{
+			// Do nothing
 		}
-		else
-		{}
 		update = false;
 	}
 
 	(timer <= 0) ? (update = true) : (timer--);
+}
+
+void Player::kickBall(float voltage)
+{
+	vector<char> message(4);
+	*((float *)&message[0]) = voltage;
+	MQTTClient->publish(robotId + "/kicker/kick/cmd", message);
 }
 
 /**
@@ -216,7 +252,7 @@ void Player::remove()
 
 float Player::getKickerPower(Vector2 destination)
 {
-	return min(0.25 + 0.225 * logf(1.225 * Vector2Distance(playerPos, destination)), 0.8);
+	return min(0.25f + 0.225f * logf(1.225f * Vector2Distance(playerPos, destination)), KICK_MAX_POWER);
 	// return -0.0127 + 0.286 * distance - 0.0455 * pow(distance, 2) + 0.00306 * pow(distance, 3);
 }
 
@@ -226,15 +262,7 @@ void Player::passBall(Vector2 friendPos)
 	float charge = Vector2Distance(playerPos, friendPos) * CHARGE_PER_DELTA_DISTANCE;
 }
 
-bool Player::isPathBlocked(Vector2 nextPos)
-{
-	for (auto enemyPos : this->enemyPos)
-		if (CheckCollisionCircles(nextPos, ROBOT_RADIUS, enemyPos, ROBOT_RADIUS))
-			return false;
-	return true;
-}
-
-bool Player::getTotalribblingDistance()
+bool Player::getTotalDribblingDistance()
 {
 	return Vector2Distance(playerPos, dribblingStartPos);
 }
@@ -251,7 +279,7 @@ void Player::findNextPos()
 
 bool Player::isGoalPossible()
 {
-	return true;
+	return false;
 }
 
 // Check collision between circle and line
@@ -265,8 +293,96 @@ bool CheckCollisionCircleLine(Vector2 center, float radius, Vector2 startPos, Ve
 
 bool Player::isPassPossible(Vector2 friendPos) // should consider enemy movement
 {
-	for (auto enemyPos : this->enemyPos)
+	for (auto enemyPos : enemyTeamPos)
 		if (CheckCollisionCircleLine(enemyPos, ROBOT_RADIUS, playerPos, friendPos))
 			return false;
 	return true;
+}
+
+bool Player::isPathBlocked(Vector2 nextPos)
+{
+	for (auto enemyPos : enemyTeamPos)
+		if (CheckCollisionCircles(nextPos, ROBOT_RADIUS, enemyPos, ROBOT_RADIUS))
+			return false;
+	return true;
+}
+
+bool Player::isPlayerClosestTo(Vector2 position) // findClosestPlayer() would be more efficient (redundant)
+{
+	float playerDistance = Vector2Distance(playerPos, position);
+	for (auto friendPos : teamPos)
+		if (playerDistance > Vector2Distance(friendPos, ballPos))
+			return false;
+	return true;
+}
+
+uint8_t Player::findClosestPlayerTo(Vector2 position)
+{
+	float minDistance = MAXFLOAT, playerDistance;
+	uint8_t playerNum;
+	for (uint8_t i = 0; i < teamSize; i++)
+		if (minDistance > (playerDistance = Vector2Distance(teamPos[i], ballPos)))
+		{
+			minDistance = playerDistance;
+			playerNum = i;
+		}
+	return playerNum;
+}
+
+void Player::keepFormation() // DT?
+{
+	if (teamState == Attacking)
+	{
+		playerWithBall = findClosestPlayerTo(ballPos);
+		// if (isPlayerClosestTo(teamPos[playerWithBall])) // better if only asked once by DT
+		if (playerType == Defender)
+		{
+			// findDefenderAttackPos()
+		}
+		else if (playerType == Striker)
+		{
+			if (playerNum != playerWithBall) // would be more efficient (DT)
+			// if (!isPlayerClosestTo(ballPos))
+			{
+				formationPos = {teamPos[playerWithBall].x, baseFormation[playerNum].y};
+				// formationPos = Vecto2Add(teamPos[playerWithBall], {0, STRIKERS_DIST});
+				// findStrikerAttackPos() won't work if players don't communicate (need DT)
+				// needs to calculate an action radius (best pos) and be ready to receive through pass
+			}
+			else
+			{
+				// should be here but the switch does it
+			}
+		}
+		else // if (playerType == GoalKeeper)
+		{
+			// moveToGoalCenter
+		}
+	}
+	else if (teamState == Defending)
+	{
+		if (playerType == Defender)
+		{
+			// keepDefensiveLine()
+			// coverEnemy()
+		}
+		else if (playerType == Striker)
+		{
+			// findStrikerDefensivePos()
+		}
+		else // if (playerType == GoalKeeper)
+		{
+			// coverGoal()
+			// catchBall()
+		}
+	}
+}
+
+bool Player::isPlayerFacingGoal() // goal is a line, not a point, should use triangles
+{
+	float ballAngle = 90.0f - Vector2Angle(playerPos, ballPos);
+	float goalAngle = 90.0f - Vector2Angle(playerPos, GOAL);
+	if (abs(goalAngle - ballAngle) < MINIMAL_ERROR) // calculates the aceptable error to kick
+		return true;
+	return false;
 }

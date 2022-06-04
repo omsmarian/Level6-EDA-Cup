@@ -60,11 +60,14 @@ void GameController::onMessage(string topic, vector<char> payload)
 	case preKickOff:
 	{
 		setInitialPositions();
+		for (auto player : playerList)
+			player->playerState = KeepingFormation;
+
 		break;
 	}
 	case kickOff:
 	{
-		if(isEnemyWithBall())
+		if (isEnemyWithBall())
 			for (auto player : playerList)
 				player->teamState = Defending;
 		else
@@ -110,7 +113,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 	for (auto player : playerList)
 	{
 		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector2));
-		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
+		memcpy(player->enemyTeamPos.data(), enemyTeamPos.data(), teamSize * sizeof(Vector2));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
 		player->updateState();
@@ -134,8 +137,8 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 		}
 		else if (topic == ("robot2." + to_string(i) + "/motion/state"))
 		{
-			Vector2 aux = { *((float*)&payload[0]), *((float*)&payload[8]) };
-			enemyPos[i] = aux;
+			Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
+			enemyTeamPos[i] = aux;
 		}
 	}
 	if (topic == "ball/motion/state")
@@ -211,19 +214,120 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPositions()
 {
-	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({ 4.5, 0 }));
-	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({ -2, 1 }));
-	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({ -2, -1 }));
-	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({ -3.5, 2 }));
-	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({ -3.5, 0 }));
-	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({ -3.5, -2 }));
+	// for (int i = 0; i < 6; i++)
+	// 	playerList[i]->moveToSetpoint(playerList[i]->getSetpoint(BaseFormation[i]));
+
+	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
+	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({-2, 1}));
+	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({-2, -1}));
+	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({-3.5, 2}));
+	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({-3.5, 0}));
+	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({-3.5, -2}));
 }
 
 bool GameController::isEnemyWithBall()
 {
-	for (auto enemy : enemyPos)
+	for (auto enemy : enemyTeamPos)
 		if (Vector2Distance(enemy, ballPos) <= ROBOT_RADIUS + MIN_DISTANCE)
 			// enemyHasBall = true;
 			return true;
 	return false;
+}
+
+GridWithWeights makeHeatMap()
+{
+	// vos le pasas una posicion y te fijas si esta cerca de un robot, te fijas cuan cerca esta
+	// y le asignas el peso correspondiente
+
+	GridWithWeights grid(20, 20);
+	GridLocation heatMapPosition;
+	heatMapPosition.x = 5;
+	heatMapPosition.y = 5;
+	heatMapPosition.weight = WEIGHT;
+	grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y, heatMapPosition.weight});
+	for (int i = 1; i < WEIGHT; i++)
+	{
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y + i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - i, WEIGHT - i});
+		grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + i, WEIGHT - i});
+		if (i == 2)
+		{
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + 1, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y + i, WEIGHT - i});
+		}
+		if (i == 3)
+		{
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y + i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y + i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y - i, WEIGHT - i});
+
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 1), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 2), WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y - i, WEIGHT - i});
+			grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y - i, WEIGHT - i});
+		}
+	}
+	return grid;
+}
+
+GridLocation GameController::actualPositionToHeatMapPosition(vector<float> actualPosition)
+{
+	vector<int> auxHeatmapPosition(2);
+
+	auxHeatmapPosition[0] = actualPosition[0] * 10 + 45;
+	auxHeatmapPosition[1] = -(actualPosition[1] * 10 - 30);
+
+	if (auxHeatmapPosition[0] == 90)
+	{
+		auxHeatmapPosition[0] -= 1;
+	}
+	if (auxHeatmapPosition[1] == 60)
+	{
+		auxHeatmapPosition[1] -= 1;
+	}
+
+	GridLocation heatMapPosition = {auxHeatmapPosition[0], auxHeatmapPosition[1]};
+
+	return heatMapPosition;
+}
+
+vector<float> GameController::heatMapPositionToActualPosition(GridLocation heatMapLocation)
+{
+	vector<float> actualPosition(2);
+
+	if (heatMapLocation.x == 89)
+	{
+		heatMapLocation.x += 1;
+	}
+	if (heatMapLocation.y == 59)
+	{
+		heatMapLocation.y += 1;
+	}
+
+	actualPosition[0] = ((float)(heatMapLocation.y) - 45.0f) / 10.0f;
+	actualPosition[1] = (-(float)(heatMapLocation.x) + 30.0f) / 10.0f;
+
+	return actualPosition;
 }

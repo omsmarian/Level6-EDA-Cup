@@ -21,7 +21,8 @@
 
 
 
-#define WEIGHT 5
+#define DELTA_GRADIENT 0.01f
+
 
 using namespace std;
 
@@ -50,6 +51,8 @@ public:
 private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
+	float getCost(Vector3 position, Vector3 playerPos);
+	vector<float> GetDirection(Vector3 position, Vector3 playerPos);
 
 	uint8_t timer;
 	Image image;
@@ -59,9 +62,9 @@ private:
 
 	std::vector<char> lastPayload;
 
-	Vector2 ballPos;
+	Vector3 ballPos;
 	float ballHeight;
-	array<Vector2, 6> teamPos, enemyPos;
+	array<Vector3, 6> teamPos, enemyPos;
 
 	int gameState, teamNumber, teamSize = 6;
 	uint8_t teamMessageRefersTo;

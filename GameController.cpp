@@ -9,14 +9,10 @@
  */
 
 #include "GameController.h"
-#include "AStar.cpp"
 #include <iostream>
 #include <cstring>
 #include <unordered_map>
 
-GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition);
-vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation);
-GridWithWeights makeHeatMap(vector<Player*> playerList);
 
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
@@ -62,18 +58,7 @@ GameController::~GameController()
 void GameController::onMessage(string topic, vector<char> payload)
 {
 	recieveInformation(topic, payload);
-	GridWithWeights heatmap = makeHeatMap(playerList);
-	GridLocation start, goal{0,50};
-	unordered_map<GridLocation, GridLocation> cameFrom;
-	unordered_map<GridLocation, double> costSoFar;
-	vector<GridLocation> path;
-	start = actualPositionToHeatMapPosition(playerList[0]->playerPos);
-	vector<float> aux = heatMapPositionToActualPosition(goal);
-	cout << aux[0] << " , " << aux[1] << endl;
-	//cout << start.x << " , " << start.y << endl;
-	vector<float> destination = {-1, 0, 0};
-
-
+	Vector3 aux;
 	if(update)
 	{
 		switch (gameState)
@@ -87,26 +72,15 @@ void GameController::onMessage(string topic, vector<char> payload)
 			case kickOff:
 			{
 				cout << "kickoff" << endl;
-				playerList[0]->moveToBall();
+				//playerList[0]->moveToBall();
 				break;
 			}
 			case preFreeKick:
 			{
-				timer = 10;
-				cout << "entro!" << endl;
-				if(goal.x != playerList[0]->playerPos.x && goal.y != playerList[0]->playerPos.y)
-				{
-					a_star_search(heatmap, start, goal, cameFrom, costSoFar);
-					cout << "entro 1!" << endl;
-					path = reconstruct_path(start, goal, cameFrom);
-					cout << "entro 2!" << endl;
-					cout << path[2].x << " , " << path[2].y << endl;
-					destination = heatMapPositionToActualPosition(path[2]);
-					cout << "x:" << destination[0] << " y:" << destination[1] << endl;
-					if(destination[0])
-					playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({destination[0], destination[1]}));
-					// playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
-				}
+				Vector3 aux = {4,0,2};
+				playerList[0]->moveToSetpoint(GetDirection(aux, playerList[0]->playerPos));
+					//playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({destination[0], destination[1]}));
+					//playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
 				break;
 			}
 			case freeKick:
@@ -142,8 +116,8 @@ void GameController::onMessage(string topic, vector<char> payload)
 
 	for (auto player : playerList)
 	{
-		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector2));
-		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector2));
+		memcpy(player->teamPos.data(), teamPos.data(), teamSize * sizeof(Vector3));
+		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector3));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
 		// player->playerState = Still;
@@ -173,12 +147,12 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	{
 		if (topic == (playerList[i]->robotId + "/motion/state"))
 		{
-			Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
+			Vector3 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
 			playerList[i]->playerPos = teamPos[i] = aux;
 		}
 		else if (topic == ("robot2." + to_string(i) + "/motion/state"))
 		{
-			Vector2 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
+			Vector3 aux = {*((float *)&payload[0]), *((float *)&payload[8])};
 			enemyPos[i] = aux;
 		}
 	}
@@ -255,6 +229,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 
 void GameController::setInitialPositions()
 {
+
 	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
 	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({-2, 1}));
 	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({-2, -1}));
@@ -264,102 +239,50 @@ void GameController::setInitialPositions()
 }
 
 
-
-
-
-GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition)
+float GameController::getCost(Vector3 position, Vector3 playerPos)
 {
-	Vector2 auxHeatmapPosition;
-
-	auxHeatmapPosition.x = actualPosition.x * 10 + 45;
-	auxHeatmapPosition.y = -(actualPosition.y * 10 - 30);
-
-	if (auxHeatmapPosition.x == 90)
-	{
-		auxHeatmapPosition.x -= 1;
-	}
-	if (auxHeatmapPosition.y == 60)
-	{
-		auxHeatmapPosition.y -= 1;
-	}
-
-	GridLocation heatMapPosition = {(int)auxHeatmapPosition.x,(int) auxHeatmapPosition.y};
-	return heatMapPosition;
+	cout << "position " << position.x << " , " << position.y << " , " << position.z << endl;
+	cout << "playerPos " << playerPos.x << " , " << playerPos.y << " , " << playerPos.z << endl;
+	float distance = Vector3Distance(playerPos, position);
+	cout << "distance is" << distance << endl;
+	float sigma = 5;
+	float cost = expf((distance*distance)/(sigma * sigma));
+	return cost;
 }
 
-
-vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation)
+vector<float> GameController::GetDirection(Vector3 position, Vector3 playerPos)
 {
-	vector<float> actualPosition(2);
-
-	if (heatMapLocation.x == 89)
-	{
-		heatMapLocation.x += 1;
-	}
-	if (heatMapLocation.y == 59)
-	{
-		heatMapLocation.y += 1;
-	}
-
-	actualPosition[1] = ((heatMapLocation.y) - 45.0f) / 10.0f;
-	actualPosition[0] = (-(heatMapLocation.x) + 30.0f) / 10.0f;
-	return actualPosition;
-}
-
-GridWithWeights makeHeatMap(vector<Player*> playerList)
-{
-	GridWithWeights grid(90, 60);
+	vector<Vector3> gradientList;
 	for(auto player : playerList)
 	{
-		GridLocation heatMapPosition = actualPositionToHeatMapPosition(player->playerPos);	
-		grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y, heatMapPosition.weight});
-		for (int i = 1; i < WEIGHT; i++)
+		float cost = getCost(position, player->playerPos); 
+		float costX = getCost(Vector3Add(position, { DELTA_GRADIENT , 0, 0 }), player->playerPos); 
+		float costZ = getCost(Vector3Add(position, { 0, 0, DELTA_GRADIENT }), player->playerPos);
+		// cout << cost << endl;
+		// cout << costX << endl;
+		// cout << costZ << endl;
+		
+		Vector3 gradient = {-(costX - cost)/DELTA_GRADIENT, 0, -(costZ - cost)/DELTA_GRADIENT};
+		gradientList.push_back(gradient);
+	}
+	
+	int index = 0;
+	float prev = Vector3Length(gradientList[0]);
+	for(int i=1; i < gradientList.size(); i++)
+	{
+		float actual = Vector3Length(gradientList[i]);
+		if(actual > prev)
 		{
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x, heatMapPosition.y + i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - i, WEIGHT - i});
-			grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + i, WEIGHT - i});
-			if (i == 2)
-			{
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + 1, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - 1, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - 1, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + 1, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y - i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y - i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - 1, heatMapPosition.y + i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + 1, heatMapPosition.y + i, WEIGHT - i});
-			}
-			if (i == 3)
-			{
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 1), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y + (i - 2), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y + i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y + i, WEIGHT - i});
-
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 1), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y + (i - 2), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y + i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y + i, WEIGHT - i});
-
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 1), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + i, heatMapPosition.y - (i - 2), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 1), heatMapPosition.y - i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x + (i - 2), heatMapPosition.y - i, WEIGHT - i});
-
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 1), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - i, heatMapPosition.y - (i - 2), WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 1), heatMapPosition.y - i, WEIGHT - i});
-				grid.forests.emplace(GridLocation{heatMapPosition.x - (i - 2), heatMapPosition.y - i, WEIGHT - i});
-			}
+			prev = actual;
+			index = i;
 		}
 	}
-	return grid;
-}
 
+	vector<float> directionToMove(3);
+	directionToMove = {gradientList[index].x, gradientList[index].y, gradientList[index].z};
+
+
+	return directionToMove;
+}
 
 

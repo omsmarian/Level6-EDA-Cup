@@ -29,29 +29,29 @@ public:
 	Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient);
 	~Player();
 	void moveToSetpoint(vector<float> setPoint);
-	vector<float> getSetpoint(Vector2 destination);
-	float getSetAngle(Vector2 destination);
+	vector<float> getSetpoint(Vector3 destination);
+	float getSetAngle(Vector3 destination);
 	void moveToBall();
 	void remove();
-	float getKickerPower(Vector2 destination);
+	float getKickerPower(Vector3 destination);
 	void updateState();
-	void passBall(Vector2 friendPos);
-	bool isPathBlocked(Vector2 nextPos);
+	void passBall(Vector3 friendPos);
+	bool isPathBlocked(Vector3 nextPos);
 	bool getTotalribblingDistance();
 	void findNextPlayer();
-	bool isPassPossible(Vector2 friendPos);
+	bool isPassPossible(Vector3 friendPos);
 	bool isGoalPossible();
 	void findNextPos();
 	bool isEnemyWithBall();
 
-	Vector2 playerPos, ballPos, dribblingStartPos, nextPos;
+	Vector3 playerPos, ballPos, dribblingStartPos, nextPos;
 	float ballHeight;
 	string robotId;
 	int teamNum;
 
 	bool kick, enemyHasBall, passIsPossible;
 	uint8_t playerState = Still, playerWithBall, nextPlayer;
-	array<Vector2, 6> teamPos, enemyPos;
+	array<Vector3, 6> teamPos, enemyPos;
 
 private:
 	MQTTClient2 *MQTTClient;

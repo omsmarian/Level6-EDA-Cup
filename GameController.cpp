@@ -12,7 +12,11 @@
 #include "AStar.cpp"
 #include <iostream>
 #include <cstring>
+#include <unordered_map>
 
+GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition);
+vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation);
+GridWithWeights makeHeatMap(vector<Player*> playerList);
 
 #define MIN_DISTANCE 0.01
 #define CHARGE_VALUE 200
@@ -58,51 +62,82 @@ GameController::~GameController()
 void GameController::onMessage(string topic, vector<char> payload)
 {
 	recieveInformation(topic, payload);
+	GridWithWeights heatmap = makeHeatMap(playerList);
+	GridLocation start, goal{0,50};
+	unordered_map<GridLocation, GridLocation> cameFrom;
+	unordered_map<GridLocation, double> costSoFar;
+	vector<GridLocation> path;
+	start = actualPositionToHeatMapPosition(playerList[0]->playerPos);
+	vector<float> aux = heatMapPositionToActualPosition(goal);
+	cout << aux[0] << " , " << aux[1] << endl;
+	//cout << start.x << " , " << start.y << endl;
+	vector<float> destination = {-1, 0, 0};
 
-	switch (gameState)
+
+	if(update)
 	{
-	case preKickOff:
-	{
-		setInitialPositions();
-		break;
-	}
-	case kickOff:
-	{
-		playerList[0]->moveToBall();
-		break;
-	}
-	case preFreeKick:
-	{
-		break;
-	}
-	case freeKick:
-	{
-		break;
-	}
-	case prePenaltyKick:
-	{
-		break;
-	}
-	case penaltyKick:
-	{
-		break;
-	}
-	case pauseGame:
-	{
-		break;
-	}
-	case continueGame:
-	{
-		break;
-	}
-	case removeRobot:
-	{
-		break;
-	}
-	case addRobot:
-	{
-		break;
-	}
+		switch (gameState)
+		{
+			case preKickOff:
+			{
+				timer = 3;
+				setInitialPositions();
+				break;
+			}
+			case kickOff:
+			{
+				cout << "kickoff" << endl;
+				playerList[0]->moveToBall();
+				break;
+			}
+			case preFreeKick:
+			{
+				timer = 10;
+				cout << "entro!" << endl;
+				if(goal.x != playerList[0]->playerPos.x && goal.y != playerList[0]->playerPos.y)
+				{
+					a_star_search(heatmap, start, goal, cameFrom, costSoFar);
+					cout << "entro 1!" << endl;
+					path = reconstruct_path(start, goal, cameFrom);
+					cout << "entro 2!" << endl;
+					cout << path[2].x << " , " << path[2].y << endl;
+					destination = heatMapPositionToActualPosition(path[2]);
+					cout << "x:" << destination[0] << " y:" << destination[1] << endl;
+					if(destination[0])
+					playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({destination[0], destination[1]}));
+					// playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
+				}
+				break;
+			}
+			case freeKick:
+			{
+				break;
+			}
+			case prePenaltyKick:
+			{
+				break;
+			}
+			case penaltyKick:
+			{
+				break;
+			}
+			case pauseGame:
+			{
+				break;
+			}
+			case continueGame:
+			{
+				break;
+			}
+			case removeRobot:
+			{
+				break;
+			}
+			case addRobot:
+			{
+				break;
+			}
+		}
 	}
 
 	for (auto player : playerList)
@@ -113,6 +148,16 @@ void GameController::onMessage(string topic, vector<char> payload)
 		player->ballHeight = ballHeight;
 		// player->playerState = Still;
 		player->updateState();
+	}
+	
+	if (timer <= 0)
+	{
+		update = true;
+	}
+	if (timer > 0)
+	{
+		update = false;
+		timer--;
 	}
 }
 
@@ -220,6 +265,8 @@ void GameController::setInitialPositions()
 
 
 
+
+
 GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition)
 {
 	Vector2 auxHeatmapPosition;
@@ -237,14 +284,13 @@ GridLocation actualPositionToHeatMapPosition(Vector2 actualPosition)
 	}
 
 	GridLocation heatMapPosition = {(int)auxHeatmapPosition.x,(int) auxHeatmapPosition.y};
-
 	return heatMapPosition;
 }
 
 
-Vector2 heatMapPositionToActualPosition(GridLocation heatMapLocation)
+vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation)
 {
-	Vector2 actualPosition;
+	vector<float> actualPosition(2);
 
 	if (heatMapLocation.x == 89)
 	{
@@ -255,15 +301,14 @@ Vector2 heatMapPositionToActualPosition(GridLocation heatMapLocation)
 		heatMapLocation.y += 1;
 	}
 
-	actualPosition.x = ((float)(heatMapLocation.y) - 45.0f) / 10.0f;
-	actualPosition.y = (-(float)(heatMapLocation.x) + 30.0f) / 10.0f;
-
+	actualPosition[1] = ((heatMapLocation.y) - 45.0f) / 10.0f;
+	actualPosition[0] = (-(heatMapLocation.x) + 30.0f) / 10.0f;
 	return actualPosition;
 }
 
 GridWithWeights makeHeatMap(vector<Player*> playerList)
 {
-	GridWithWeights grid(20, 20);
+	GridWithWeights grid(90, 60);
 	for(auto player : playerList)
 	{
 		GridLocation heatMapPosition = actualPositionToHeatMapPosition(player->playerPos);	

@@ -27,6 +27,7 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 		robotId = "robot2." + robotIndex;
 	}
 	cout << robotId << endl;
+	directionToMove = {0,0,0};
 	this->MQTTClient = &MQTTClient;
 
 	image = LoadImage("../Images/image.png");

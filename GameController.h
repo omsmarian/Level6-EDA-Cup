@@ -51,8 +51,8 @@ public:
 private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
-	float getCost(Vector3 position, Vector3 playerPos);
-	vector<float> GetDirection(Vector3 position, Vector3 playerPos);
+	float getCost(Vector3 position);
+	void GetDirection(void);
 
 	uint8_t timer;
 	Image image;

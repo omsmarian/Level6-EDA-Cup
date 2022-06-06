@@ -48,6 +48,8 @@ public:
 	float ballHeight;
 	string robotId;
 	int teamNum;
+	Vector3 gradient;
+	vector<float> directionToMove;
 
 	bool kick, enemyHasBall, passIsPossible;
 	uint8_t playerState = Still, playerWithBall, nextPlayer;

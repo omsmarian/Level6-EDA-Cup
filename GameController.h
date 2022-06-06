@@ -18,7 +18,6 @@
 #include <raymath.h>
 #include <vector>
 #include <array>
-#include "AStar.h"
 
 using namespace std;
 
@@ -48,10 +47,6 @@ private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
 	bool isEnemyWithBall();
-	// GridWithWeights makeHeatMap();
-	GridLocation actualPositionToHeatMapPosition(vector<float> actualPosition);
-	GridLocation makeHeatMap(vector<float> actualPosition);
-	vector<float> heatMapPositionToActualPosition(GridLocation heatMapLocation);
 
 	uint8_t timer;
 	// Image image;

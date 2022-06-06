@@ -61,7 +61,7 @@ private:
 	MQTTClient2 *MQTTClient;
 	Image image;
 	uint8_t timer = 0;
-	bool update = false;
+	bool update = true;
 	float getCost(Vector3 position, Vector3 center);
 	Vector3 GetDirection(Vector3 position);
 

@@ -66,17 +66,17 @@ void GameController::onMessage(string topic, vector<char> payload)
 			{
 				timer = 3;
 				setInitialPositions();
+				playerList[0]->playerState = GoingToBall;
 				break;
 			}
 			case kickOff:
 			{
 				cout << "kickoff" << endl;
-				//playerList[0]->moveToBall();
+				playerList[0]->updateState();
 				break;
 			}
 			case preFreeKick:
 			{
-				playerList[0]->moveToSetpoint(playerList[0]->getSetpoint(Vector3{4,0,0}));
 				break;
 			}
 			case freeKick:
@@ -97,6 +97,9 @@ void GameController::onMessage(string topic, vector<char> payload)
 			}
 			case continueGame:
 			{
+				cout << "continue" << endl;
+				playerList[0]->playerState = GoingToBall;
+				playerList[0]->updateState();
 				break;
 			}
 			case removeRobot:
@@ -169,6 +172,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/kickOff")
 	{
+		cout << "llego kickOFF" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = kickOff;
 	}
@@ -201,6 +205,7 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/continue")
 	{
+		cout << "llego continue" << endl;
 		gameState = continueGame;
 	}
 	else if (topic == "edacup/removeRobot")
@@ -229,9 +234,9 @@ void GameController::setInitialPositions()
 	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
 	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({-2, 1}));
 	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({-2, -1}));
-	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({-3.5, 2}));
-	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({-3.5, 0}));
-	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({-3.5, -2}));
+	playerList[3]->moveToSetpoint(playerList[3]->getSetpoint({-3, 2}));
+	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({-3, 0}));
+	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({-3, -2}));
 }
 
 

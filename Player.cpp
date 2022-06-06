@@ -5,14 +5,14 @@
 
 using namespace std;
 
-#define MIN_DISTANCE 0.01
+#define MIN_DISTANCE 0.1
 #define CHARGE_VALUE 200
 #define MINIMAL_ERROR 10
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 0.7
 
 
-const Vector3 goal = {-4.5, 0, 0};
+const Vector3 goal = {4.5, 0, 0.4};
 
 Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 {
@@ -61,6 +61,7 @@ void Player::updateState()
 		{
 			timer = 3;
 			moveToBall();
+			cout << "going to ball" << endl;
 
 			if (Vector3Distance(playerPos, ballPos) >= MIN_DISTANCE)
 				playerState = GoingToBall;
@@ -71,12 +72,14 @@ void Player::updateState()
 		}
 		case AtBall:
 		{
+			cout << " at ball " << endl;
 			timer = 1;
 			float voltage = 3;
 			vector<char> message(4);
 			memcpy(&(message[0]), &voltage, sizeof(float));
 			MQTTClient->publish(robotId + "/dribbler/voltage/set", message);
 
+			playerState = KickingBall;
 			dribblingStartPos = playerPos;
 
 			if (ballHeight > 0.1)
@@ -124,8 +127,9 @@ void Player::updateState()
 			float ballAngle = 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {ballPos.x, ballPos.y});
 			float goalAngle = 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {goal.x, goal.y});
 
-			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR) && kick) // calculates the aceptable error to kick
+			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR)) // calculates the aceptable error to kick
 			{
+				cout << "kicking ball" << endl;
 				// voltage = getKickerPower(goal);
 				const float MAX_POWER = 0.8f;
 				float voltage = MAX_POWER;
@@ -185,9 +189,11 @@ void Player::moveToSetpoint(vector<float> setpoint)
  */
 vector<float> Player::getSetpoint(Vector3 destination)
 {
-	Vector2 auxnextPos = Vector2MoveTowards({playerPos.x, playerPos.y}, {destination.x, destination.y}, DELTA_DISTANCE);
-	Vector3 nextPos = Vector3Add(Vector3Scale(GetDirection(Vector3{auxnextPos.x, 0, auxnextPos.y}), 2), Vector3{auxnextPos.x, 0, auxnextPos.y});
-	return {nextPos.x, nextPos.z, 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {destination.x, destination.y})};
+	// Vector2 auxnextPos = Vector2MoveTowards({playerPos.x, playerPos.y}, {destination.x, destination.y}, DELTA_DISTANCE);
+	// Vector3 nextPos = Vector3Add(Vector3Scale(GetDirection(Vector3{auxnextPos.x, 0, auxnextPos.y}), 2), Vector3{auxnextPos.x, 0, auxnextPos.y});
+	// return {nextPos.x, nextPos.z, 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {destination.x, destination.y})};
+	Vector2 nextPos = Vector2MoveTowards({playerPos.x, playerPos.y}, {destination.x, destination.y}, DELTA_DISTANCE);
+	return {nextPos.x, nextPos.y, 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {destination.x, destination.y})};
 }
 
 /**

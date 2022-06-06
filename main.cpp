@@ -70,13 +70,23 @@ int main(int argc, char *argv[])
 
 	MQTTClient.subscribe("ball/motion/state");
 	for (uint8_t i = 1; i < 3; i++)
+	{
 		for (uint8_t j = 1; j < 7; j++)
+		{
 			MQTTClient.subscribe("robot" + to_string(i) + "." + to_string(j) + "/motion/state");
+		}
+	}
+
 	MQTTClient.subscribe("edacup/preKickOff");
 	MQTTClient.subscribe("edacup/kickOff");
 	MQTTClient.subscribe("edacup/preFreeKick");
 	MQTTClient.subscribe("edacup/freeKick");
 	MQTTClient.subscribe("edacup/prePenaltyKick");
+	MQTTClient.subscribe("edacup/penaltyKick");
+	MQTTClient.subscribe("edacup/pause");
+	MQTTClient.subscribe("edacup/continue");
+	MQTTClient.subscribe("edacup/removeRobot");
+	MQTTClient.subscribe("edacup/addRobot");
 
 	MQTTClient.run();
 

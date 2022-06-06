@@ -34,7 +34,6 @@ GameController::GameController(MQTTClient2 *mqtt, vector<Player *> playersList)
 	{
 		playerList.push_back(playersList[i]);
 	}
-
 	update = false;
 	timer = 0;
 	teamNumber = playerList[0]->teamNum;
@@ -77,11 +76,7 @@ void GameController::onMessage(string topic, vector<char> payload)
 			}
 			case preFreeKick:
 			{
-				Vector3 aux = {4,0,2};
-				GetDirection();
-				playerList[0]->moveToSetpoint(playerList[0]->directionToMove);
-					//playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({destination[0], destination[1]}));
-					//playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
+				playerList[0]->moveToSetpoint(playerList[0]->getSetpoint(Vector3{4,0,0}));
 				break;
 			}
 			case freeKick:
@@ -240,35 +235,32 @@ void GameController::setInitialPositions()
 }
 
 
-float GameController::getCost(Vector3 position)
-{
-	float sigma = 1;
-	float cost;
-	for(int i = 0; i<teamSize; i++)	// itero sobre enemigos
-	{
-		cout << "enemy " << i << " position: " << enemyPos[i].x << " , " << enemyPos[i].y 
-				<< " , " << enemyPos[i].z << endl;
-		float distance = Vector3Distance(enemyPos[i], position);
-		cout << distance << endl;
-		cost += expf((distance*distance)/(sigma * sigma));
-		//cout << cost << endl;
-	}
-	return cost;
-}
+// float GameController::getCost(Vector3 position, Vector3 center)
+// {
+// 	float sigma = 1;
+// 	float cost;
+// 	cost += expf(Vector3LengthSqr(Vector3Subtract(position, center))/(sigma * sigma));
+// 	return cost;
+// }
 
-void GameController::GetDirection(void)
-{
-	Vector3 auxGradient;
-	for(int i = 0; i<=5; i++)
-	{
-		float cost = getCost(playerList[i]->playerPos); 
-		float costX = getCost(Vector3Add(playerList[i]->playerPos, { DELTA_GRADIENT , 0, 0 })); 
-		float costZ = getCost(Vector3Add(playerList[i]->playerPos, { 0, 0, DELTA_GRADIENT }));
-		auxGradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
-		auxGradient = Vector3Scale(Vector3Normalize(auxGradient), -1);
-		cout << auxGradient.x << " , " << auxGradient.y << " , " << auxGradient.z << endl;
-		playerList[i]->directionToMove = {auxGradient.x, auxGradient.y, auxGradient.z};
-	}
-}
+// Vector3 GameController::GetDirection(Vector3 position)
+// {	float cost = 0, costX = 0, costZ = 0;
+// 	Vector3 auxGradient;
+// 	for(int i = 0; i<=5; i++)
+// 	{
+// 		cost += getCost(position, playerList[i]->playerPos); 
+// 		costX += getCost(position, Vector3Add(playerList[i]->playerPos, { DELTA_GRADIENT , 0, 0 })); 
+// 		costZ += getCost(position, Vector3Add(playerList[i]->playerPos, { 0, 0, DELTA_GRADIENT }));
+// 	}
+// 	auxGradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
+// 	auxGradient = Vector3Scale((auxGradient), -1);
+// 	cout << auxGradient.x << " , " << auxGradient.y << " , " << auxGradient.z << endl;
+
+// 	// vector <float> directionToMove = {auxGradient.x, auxGradient.y, auxGradient.z};
+// 	// cout << directionToMove[0] << " , " << directionToMove[1] << " , " << directionToMove[2] << endl;
+
+// 	return auxGradient;
+
+// }
 
 

@@ -185,8 +185,9 @@ void Player::moveToSetpoint(vector<float> setpoint)
  */
 vector<float> Player::getSetpoint(Vector3 destination)
 {
-	Vector2 nextPos = Vector2MoveTowards({playerPos.x, playerPos.y}, {destination.x, destination.y}, DELTA_DISTANCE);
-	return {nextPos.x, nextPos.y, 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {destination.x, destination.y})};
+	Vector2 auxnextPos = Vector2MoveTowards({playerPos.x, playerPos.y}, {destination.x, destination.y}, DELTA_DISTANCE);
+	Vector3 nextPos = Vector3Add(Vector3Scale(GetDirection(Vector3{auxnextPos.x, 0, auxnextPos.y}), 2), Vector3{auxnextPos.x, 0, auxnextPos.y});
+	return {nextPos.x, nextPos.z, 90.0f - Vector2Angle({playerPos.x, playerPos.y}, {destination.x, destination.y})};
 }
 
 /**
@@ -209,6 +210,7 @@ float Player::getSetAngle(Vector3 destination)
 	else
 		return targetAngle;
 }
+
 
 void Player::moveToBall()
 {
@@ -288,4 +290,34 @@ bool Player::isEnemyWithBall()
 			// enemyHasBall = true;
 			return true;
 	return false;
+}
+
+float Player::getCost(Vector3 position, Vector3 center)
+{
+	float sigma = 1.5;
+	float cost = expf(-(Vector3Distance(position, center)*Vector3Distance(position, center))/(sigma * sigma));
+	return cost;
+}
+
+
+Vector3 Player::GetDirection(Vector3 position)
+{	float cost = 0, costX = 0, costZ = 0;
+	Vector3 gradient;
+	for(int i = 0; i<=5; i++)
+	{
+		if(Vector3Distance(enemyPos[i], position) < 1)
+		{
+			cost += getCost(position, enemyPos[i]); 
+			costX += getCost(position, Vector3Add(enemyPos[i], Vector3{ DELTA_GRADIENT , 0, 0 })); 
+			costZ += getCost(position, Vector3Add(enemyPos[i], Vector3{ 0, 0, DELTA_GRADIENT }));
+		}
+	}
+	gradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
+	gradient = Vector3Normalize(Vector3Scale((gradient), -1));
+	cout << "gradient: " << gradient.x << " , " << gradient.y << " , " << gradient.z << endl;
+
+	// vector <float> directionToMove = {auxGradient.x, auxGradient.y, auxGradient.z};
+	// cout << directionToMove[0] << " , " << directionToMove[1] << " , " << directionToMove[2] << endl;
+
+	return gradient;
 }

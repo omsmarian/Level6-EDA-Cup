@@ -7,6 +7,8 @@
 #include <raymath.h>
 #include <array>
 
+#define DELTA_GRADIENT 0.01f
+
 using namespace std;
 
 enum PlayerState
@@ -60,6 +62,9 @@ private:
 	Image image;
 	uint8_t timer = 0;
 	bool update = false;
+	float getCost(Vector3 position, Vector3 center);
+	Vector3 GetDirection(Vector3 position);
+
 };
 
 #endif

@@ -18,10 +18,8 @@
 #include <raymath.h>
 #include <vector>
 #include <array>
-
-
-
-// #define DELTA_GRADIENT 0.01f
+#include <iostream>
+#include <cstring>
 
 
 using namespace std;
@@ -51,8 +49,6 @@ public:
 private:
 	void recieveInformation(string topic, vector<char> payload);
 	void setInitialPositions();
-	// float getCost(Vector3 position, Vector3 center);
-	// Vector3 GetDirection(Vector3 position);
 
 	uint8_t timer;
 	Image image;

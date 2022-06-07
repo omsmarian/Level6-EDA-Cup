@@ -16,7 +16,7 @@ using namespace std;
 #define CHARGE_VALUE 200
 #define MINIMAL_ERROR 10
 #define DELTA_ANGLE 28
-#define DELTA_DISTANCE 0.7
+#define DELTA_DISTANCE 0.5
 
 /**
  * @brief Constructs Player Object
@@ -36,6 +36,7 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 		teamNum = 2;
 		robotId = "robot2." + robotIndex;
 	}
+	
 	this->MQTTClient = &MQTTClient;
 
 	if(teamNumber == 1)
@@ -47,7 +48,7 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 		goal = {-4.5, 0, 0.4};
 	}
 
-	image = LoadImage("../Images/image.png");
+	image = LoadImage("../Images/image.png");		// for windows path is: "../../../Images/image.png"
 
 	ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
 
@@ -87,7 +88,6 @@ void Player::updateState()
 		{
 			timer = 3;
 			moveToBall();
-			cout << "going to ball" << endl;
 
 			if (Vector3Distance(playerPos, ballPos) >= MIN_DISTANCE)
 				playerState = GoingToBall;
@@ -98,7 +98,6 @@ void Player::updateState()
 		}
 		case AtBall:
 		{
-			cout << " at ball " << endl;
 			timer = 1;
 			float voltage = 3;
 			vector<char> message(4);
@@ -152,7 +151,6 @@ void Player::updateState()
 
 			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR)) // calculates the aceptable error to kick
 			{
-				cout << "kicking ball" << endl;
 				const float MAX_POWER = 0.8f;
 				float voltage = MAX_POWER;
 				vector<char> message(4);
@@ -380,7 +378,6 @@ Vector3 Player::GetDirection(Vector3 position)
 	}
 	gradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
 	gradient = Vector3Normalize(Vector3Scale((gradient), -1));
-	cout << "gradient: " << gradient.x << " , " << gradient.y << " , " << gradient.z << endl;
 
 	return gradient;
 }

@@ -9,9 +9,6 @@
  */
 
 #include "GameController.h"
-#include <iostream>
-#include <cstring>
-#include <unordered_map>
 
 
 #define MIN_DISTANCE 0.01
@@ -76,8 +73,6 @@ void GameController::onMessage(string topic, vector<char> payload)
 					playerList[0]->playerState = GoingToBall;
 					flag = false;
 				}
-				cout << "kickoff" << endl;
-				// playerList[0]->updateState();
 				break;
 			}
 			case preFreeKick:
@@ -137,7 +132,6 @@ void GameController::onMessage(string topic, vector<char> payload)
 		memcpy(player->enemyPos.data(), enemyPos.data(), teamSize * sizeof(Vector3));
 		player->ballPos = ballPos;
 		player->ballHeight = ballHeight;
-		// player->playerState = Still;
 		player->updateState();
 	}
 	
@@ -184,19 +178,16 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/preKickOff")
 	{
-		cout << "preKickOFF" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = preKickOff;
 	}
 	else if (topic == "edacup/kickOff")
 	{
-		cout << "llego kickOFF" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = kickOff;
 	}
 	else if (topic == "edacup/preFreeKick")
 	{
-		cout << "preFreeKick" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = preFreeKick;
 	}
@@ -207,13 +198,11 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/prePenaltyKick")
 	{
-		cout << "prePenaltyKick" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = prePenaltyKick;
 	}
 	else if (topic == "edacup/penaltyKick")
 	{
-		cout << "penaltyKick" << endl;
 		memcpy(&teamMessageRefersTo, payload.data(), sizeof(uint8_t));
 		gameState = penaltyKick;
 	}
@@ -223,7 +212,6 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 	else if (topic == "edacup/continue")
 	{
-		cout << "llego continue" << endl;
 		gameState = continueGame;
 	}
 	else if (topic == "edacup/removeRobot")
@@ -259,34 +247,5 @@ void GameController::setInitialPositions()
 	playerList[4]->moveToSetpoint(playerList[4]->getSetpoint({-3, 0}));
 	playerList[5]->moveToSetpoint(playerList[5]->getSetpoint({-3, -2}));
 }
-
-
-// float GameController::getCost(Vector3 position, Vector3 center)
-// {
-// 	float sigma = 1;
-// 	float cost;
-// 	cost += expf(Vector3LengthSqr(Vector3Subtract(position, center))/(sigma * sigma));
-// 	return cost;
-// }
-
-// Vector3 GameController::GetDirection(Vector3 position)
-// {	float cost = 0, costX = 0, costZ = 0;
-// 	Vector3 auxGradient;
-// 	for(int i = 0; i<=5; i++)
-// 	{
-// 		cost += getCost(position, playerList[i]->playerPos); 
-// 		costX += getCost(position, Vector3Add(playerList[i]->playerPos, { DELTA_GRADIENT , 0, 0 })); 
-// 		costZ += getCost(position, Vector3Add(playerList[i]->playerPos, { 0, 0, DELTA_GRADIENT }));
-// 	}
-// 	auxGradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
-// 	auxGradient = Vector3Scale((auxGradient), -1);
-// 	cout << auxGradient.x << " , " << auxGradient.y << " , " << auxGradient.z << endl;
-
-// 	// vector <float> directionToMove = {auxGradient.x, auxGradient.y, auxGradient.z};
-// 	// cout << directionToMove[0] << " , " << directionToMove[1] << " , " << directionToMove[2] << endl;
-
-// 	return auxGradient;
-
-// }
 
 

@@ -12,8 +12,6 @@ using namespace std;
 #define DELTA_DISTANCE 0.7
 
 
-const Vector3 goal = {4.5, 0, 0.4};
-
 Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 {
 	if (teamNumber == '1')
@@ -26,9 +24,16 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 		teamNum = 2;
 		robotId = "robot2." + robotIndex;
 	}
-	cout << robotId << endl;
-	directionToMove = {0,0,0};
 	this->MQTTClient = &MQTTClient;
+
+	if(teamNumber == 1)
+	{
+		goal = {4.5, 0, 0.4};
+	}
+	else if(teamNumber == 2)
+	{
+		goal = {-4.5, 0, 0.4};
+	}
 
 	image = LoadImage("../Images/image.png");
 

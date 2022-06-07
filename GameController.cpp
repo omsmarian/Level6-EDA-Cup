@@ -55,7 +55,8 @@ GameController::~GameController()
  * @param payload containt data of a topic given
  */
 void GameController::onMessage(string topic, vector<char> payload)
-{
+{	
+	
 	recieveInformation(topic, payload);
 	Vector3 aux;
 	if(update)
@@ -66,17 +67,25 @@ void GameController::onMessage(string topic, vector<char> payload)
 			{
 				timer = 3;
 				setInitialPositions();
-				playerList[0]->playerState = GoingToBall;
 				break;
 			}
 			case kickOff:
 			{
+				if(flag == true)
+				{
+					playerList[0]->playerState = GoingToBall;
+					flag = false;
+				}
 				cout << "kickoff" << endl;
-				playerList[0]->updateState();
+				// playerList[0]->updateState();
 				break;
 			}
 			case preFreeKick:
 			{
+				if(teamMessageRefersTo == teamNumber)
+				{
+					playerList[0]->playerState = GoingToBall;
+				}
 				break;
 			}
 			case freeKick:
@@ -85,6 +94,10 @@ void GameController::onMessage(string topic, vector<char> payload)
 			}
 			case prePenaltyKick:
 			{
+				if(teamMessageRefersTo == teamNumber)
+				{
+					playerList[0]->playerState = GoingToBall;
+				}
 				break;
 			}
 			case penaltyKick:
@@ -93,13 +106,16 @@ void GameController::onMessage(string topic, vector<char> payload)
 			}
 			case pauseGame:
 			{
+				for(int i = 0; i<= 5; i++)
+				{
+					playerList[i]->playerState = Still;
+				}
+				// playerList[0]->updateState();
 				break;
 			}
 			case continueGame:
 			{
-				cout << "continue" << endl;
 				playerList[0]->playerState = GoingToBall;
-				playerList[0]->updateState();
 				break;
 			}
 			case removeRobot:
@@ -135,10 +151,10 @@ void GameController::onMessage(string topic, vector<char> payload)
 }
 
 /**
- * @brief
+ * @brief Recieves messages from MQTT and stores
  *
- * @param topic
- * @param payload
+ * @param topic topic of MQTT message
+ * @param payload payload of MQTT message
  */
 void GameController::recieveInformation(string topic, vector<char> payload)
 {
@@ -228,9 +244,12 @@ void GameController::recieveInformation(string topic, vector<char> payload)
 	}
 }
 
+/**
+ * @brief Sets robota initial formation
+ *
+ */
 void GameController::setInitialPositions()
 {
-
 	playerList[0]->moveToSetpoint(playerList[0]->getSetpoint({-1, 0}));
 	playerList[1]->moveToSetpoint(playerList[1]->getSetpoint({-2, 1}));
 	playerList[2]->moveToSetpoint(playerList[2]->getSetpoint({-2, -1}));

@@ -68,7 +68,7 @@ private:
 
 	int gameState, teamNumber, teamSize = 6;
 	uint8_t teamMessageRefersTo;
-	bool update = false, enemyHasBall = false;
+	bool update = false, enemyHasBall = false, flag = true;
 };
 
 #endif // !GameController_h

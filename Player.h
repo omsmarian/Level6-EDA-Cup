@@ -30,28 +30,15 @@ class Player
 public:
 	Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient);
 	~Player();
+	void updateState();
 	void moveToSetpoint(vector<float> setPoint);
 	vector<float> getSetpoint(Vector3 destination);
-	float getSetAngle(Vector3 destination);
-	void moveToBall();
-	void remove();
-	float getKickerPower(Vector3 destination);
-	void updateState();
-	void passBall(Vector3 friendPos);
-	bool isPathBlocked(Vector3 nextPos);
-	bool getTotalribblingDistance();
-	void findNextPlayer();
-	bool isPassPossible(Vector3 friendPos);
-	bool isGoalPossible();
-	void findNextPos();
-	bool isEnemyWithBall();
 
 	Vector3 playerPos, ballPos, dribblingStartPos, nextPos;
-	float ballHeight;
 	string robotId;
 	int teamNum;
 	Vector3 gradient;
-	vector<float> directionToMove;
+	float ballHeight;
 
 	bool kick, enemyHasBall, passIsPossible;
 	uint8_t playerState = Still, playerWithBall, nextPlayer;
@@ -62,9 +49,22 @@ private:
 	Image image;
 	uint8_t timer = 0;
 	bool update = true;
-	float getCost(Vector3 position, Vector3 center);
-	Vector3 GetDirection(Vector3 position);
+	Vector3 goal;
 
+	Vector3 GetDirection(Vector3 position);
+	float getCost(Vector3 position, Vector3 center);
+	float getSetAngle(Vector3 destination);
+	void moveToBall();
+	void remove();
+	float getKickerPower(Vector3 destination);
+	void passBall(Vector3 friendPos);
+	bool isPathBlocked(Vector3 nextPos);
+	bool getTotalribblingDistance();
+	void findNextPlayer();
+	bool isPassPossible(Vector3 friendPos);
+	bool isGoalPossible();
+	void findNextPos();
+	bool isEnemyWithBall();
 };
 
 #endif

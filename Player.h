@@ -62,7 +62,7 @@ private:
 	Image image;
 	uint8_t timer = 0;
 	bool update = true;
-	Vector3 goal;
+	//Vector3 goal;
 
 	Vector3 GetDirection(Vector3 position);
 	float getCost(Vector3 position, Vector3 center);

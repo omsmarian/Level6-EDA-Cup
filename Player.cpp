@@ -18,6 +18,9 @@ using namespace std;
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 0.5
 
+
+const Vector3 goal = {4.5, 0, 0.5};
+
 /**
  * @brief Constructs Player Object
  * @param robotIndex indicates robot number
@@ -39,14 +42,14 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 	
 	this->MQTTClient = &MQTTClient;
 
-	if(teamNumber == 1)
-	{
-		goal = {4.5, 0, 0.4};
-	}
-	else if(teamNumber == 2)
-	{
-		goal = {-4.5, 0, 0.4};
-	}
+	// if(teamNumber == 1)
+	// {
+	// 	goal = {-4.5, 0, 0.4};
+	// }
+	// else if(teamNumber == 2)
+	// {
+	// 	goal = {4.5, 0, 0.4};
+	// }
 
 	image = LoadImage("../Images/image.png");		// for windows path is: "../../../Images/image.png"
 

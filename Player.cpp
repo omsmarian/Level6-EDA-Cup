@@ -1,7 +1,14 @@
+/**
+ * @file GameController.cpp
+ * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
+ * @brief Controls the Players
+ * @date 2022-05-17
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #include "Player.h"
-#include "math.h"
-#include <iostream>
-#include <cstring>
 
 using namespace std;
 
@@ -11,7 +18,12 @@ using namespace std;
 #define DELTA_ANGLE 28
 #define DELTA_DISTANCE 0.7
 
-
+/**
+ * @brief Constructs Player Object
+ * @param robotIndex indicates robot number
+ * @param teamNumber indicates the number of the team
+ * @param MQTTClient recieves by reference the MQTTClient2 object
+ */
 Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 {
 	if (teamNumber == '1')
@@ -51,11 +63,20 @@ Player::Player(string robotIndex, char teamNumber, MQTTClient2 &MQTTClient)
 	MQTTClient.publish(robotId + "/display/lcd/set", payload);
 }
 
+
+/**
+ * @brief Destructs Player Object
+ * 
+ */
 Player::~Player()
 {
 	UnloadImage(image);
 }
 
+/**
+ * @brief Updates Player State
+ * 
+ */
 void Player::updateState()
 {
 	if (update)
@@ -96,7 +117,6 @@ void Player::updateState()
 		{
 			timer = 1;
 			vector<float> setpoint = {playerPos.x, playerPos.y, getSetAngle(goal)};
-			findNextPos();
 			if (Vector3Distance(playerPos, ballPos) < MIN_DISTANCE)
 			{
 				if (isGoalPossible())
@@ -116,10 +136,8 @@ void Player::updateState()
 		}
 		case PassingBall:
 		{
-			findNextPlayer();
 			if (isPassPossible(teamPos[nextPlayer]))
 			{
-				// passBall(nextPlayer);
 				playerState = Free;
 			}
 			else
@@ -135,13 +153,11 @@ void Player::updateState()
 			if ((abs(goalAngle - ballAngle) < MINIMAL_ERROR)) // calculates the aceptable error to kick
 			{
 				cout << "kicking ball" << endl;
-				// voltage = getKickerPower(goal);
 				const float MAX_POWER = 0.8f;
 				float voltage = MAX_POWER;
 				vector<char> message(4);
 				*((float *)&message[0]) = voltage;
 				MQTTClient->publish(robotId + "/kicker/kick/cmd", message);
-				// kick = false;
 			}
 			else
 				playerState = DribblingBall;
@@ -222,7 +238,10 @@ float Player::getSetAngle(Vector3 destination)
 		return targetAngle;
 }
 
-
+/**
+ * @brief Moves robot to ball position
+ *
+ */
 void Player::moveToBall()
 {
 	vector<char> voltage(4, 0);
@@ -232,22 +251,48 @@ void Player::moveToBall()
 	MQTTClient->publish(robotId + "/kicker/chargeVoltage/set", voltage);
 }
 
-void Player::remove()
+/**
+ * @brief returns true always
+ *
+ */
+bool Player::isGoalPossible()
 {
+	return true;
 }
 
+
+/**
+ * Las siguientes funciones no se implementaron. Empezamos con una mala estrategia intentando usar
+ * astar y heat map. Cuando pudimos implementarlo no era una implmentacion correcta y los robots se 
+ * movian de manera discreta y no queriamos eso. A ultimo momento cambiamos la estretegia y no llegamos
+ * a profundizarla.
+ */
+
+
+/**
+ * @brief Calculates the power for the kicker
+ *
+ */
 float Player::getKickerPower(Vector3 destination)
 {
 	return 0.25 + 0.225 * logf(1.225 * Vector3Distance(playerPos, destination));
-	// return -0.0127 + 0.286 * distance - 0.0455 * pow(distance, 2) + 0.00306 * pow(distance, 3);
 }
 
+/**
+ * @brief Passes Ball
+ *
+ */
 void Player::passBall(Vector3 friendPos)
 {
 	const float CHARGE_PER_DELTA_DISTANCE = 50; // charge required to pass the ball to a friend located at delta distance
 	float charge = Vector3Distance(playerPos, friendPos) * CHARGE_PER_DELTA_DISTANCE;
 }
 
+/**
+ * @brief Checks if path is blocked
+ *
+ * @param nextPos the next position the player wants to go to
+ */
 bool Player::isPathBlocked(Vector3 nextPos)
 {
 	for (auto enemyPos : this->enemyPos)
@@ -256,27 +301,19 @@ bool Player::isPathBlocked(Vector3 nextPos)
 	return true;
 }
 
+/**
+ * @brief Calculates dribbling distance
+ *
+ */
 bool Player::getTotalribblingDistance()
 {
 	return Vector3Distance(playerPos, dribblingStartPos);
 }
 
-void Player::findNextPlayer()
-{
-	// nextPlayer = ...
-}
-
-void Player::findNextPos()
-{
-	// nextPos = ...
-}
-
-bool Player::isGoalPossible()
-{
-	return true;
-}
-
-// Check collision between circle and line
+/**
+ * @brief Checks 
+ *
+ */
 bool CheckCollisionCircleLine(Vector3 center, float radius, Vector3 startPos, Vector3 endPos)
 {
 	Vector2 LineTangent = Vector2Scale(Vector2Normalize(Vector2Subtract({endPos.x, endPos.y}, {startPos.x, startPos.y})), radius);
@@ -286,6 +323,10 @@ bool CheckCollisionCircleLine(Vector3 center, float radius, Vector3 startPos, Ve
 							   Vector2Subtract({center.x, center.y}, LineNormal), &aux); // collision point is not important
 }
 
+/**
+ * @brief checks if pass is posible
+ *
+ */
 bool Player::isPassPossible(Vector3 friendPos) // should consider enemy movement
 {
 	for (auto enemyPos : this->enemyPos)
@@ -294,6 +335,10 @@ bool Player::isPassPossible(Vector3 friendPos) // should consider enemy movement
 	return true;
 }
 
+/**
+ * @brief Checks if Enemy has ball
+ *
+ */
 bool Player::isEnemyWithBall()
 {
 	for (auto enemy : enemyPos)
@@ -303,6 +348,12 @@ bool Player::isEnemyWithBall()
 	return false;
 }
 
+/**
+ * @brief get Cost of position
+ *
+ * @param position position to calculate cost at
+ * @param center center of robot
+ */
 float Player::getCost(Vector3 position, Vector3 center)
 {
 	float sigma = 1.5;
@@ -310,7 +361,11 @@ float Player::getCost(Vector3 position, Vector3 center)
 	return cost;
 }
 
-
+/**
+ * @brief Get direction to move in
+ *
+ * @param position position to calculate cost at
+ */
 Vector3 Player::GetDirection(Vector3 position)
 {	float cost = 0, costX = 0, costZ = 0;
 	Vector3 gradient;
@@ -326,9 +381,6 @@ Vector3 Player::GetDirection(Vector3 position)
 	gradient = {(costX - cost)/DELTA_GRADIENT, 0, (costZ - cost)/DELTA_GRADIENT};
 	gradient = Vector3Normalize(Vector3Scale((gradient), -1));
 	cout << "gradient: " << gradient.x << " , " << gradient.y << " , " << gradient.z << endl;
-
-	// vector <float> directionToMove = {auxGradient.x, auxGradient.y, auxGradient.z};
-	// cout << directionToMove[0] << " , " << directionToMove[1] << " , " << directionToMove[2] << endl;
 
 	return gradient;
 }

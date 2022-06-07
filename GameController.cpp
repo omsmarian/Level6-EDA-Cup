@@ -110,7 +110,6 @@ void GameController::onMessage(string topic, vector<char> payload)
 				{
 					playerList[i]->playerState = Still;
 				}
-				// playerList[0]->updateState();
 				break;
 			}
 			case continueGame:
@@ -120,6 +119,9 @@ void GameController::onMessage(string topic, vector<char> payload)
 			}
 			case removeRobot:
 			{
+
+				playerList[5]->moveToSetpoint(bench);
+				playerList[5]->playerState = Still;
 				break;
 			}
 			case addRobot:

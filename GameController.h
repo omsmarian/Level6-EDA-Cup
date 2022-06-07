@@ -65,6 +65,7 @@ private:
 	Vector3 ballPos;
 	float ballHeight;
 	array<Vector3, 6> teamPos, enemyPos;
+	vector<float> bench = {-4.5, 0, -5};
 
 	int gameState, teamNumber, teamSize = 6;
 	uint8_t teamMessageRefersTo;

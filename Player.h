@@ -1,3 +1,13 @@
+/**
+ * @file GameController.cpp
+ * @author Grupo 6: Mariano Ohms, Segundo Tanoira, Lucia Ruiz, Valentin Vieira
+ * @brief Controls the Players
+ * @date 2022-05-17
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #ifndef PLAYER_H
 #define PLAYER_H
 
@@ -6,6 +16,9 @@
 #include "MQTTClient2.h"
 #include <raymath.h>
 #include <array>
+#include "math.h"
+#include <iostream>
+#include <cstring>
 
 #define DELTA_GRADIENT 0.01f
 
@@ -60,10 +73,8 @@ private:
 	void passBall(Vector3 friendPos);
 	bool isPathBlocked(Vector3 nextPos);
 	bool getTotalribblingDistance();
-	void findNextPlayer();
 	bool isPassPossible(Vector3 friendPos);
 	bool isGoalPossible();
-	void findNextPos();
 	bool isEnemyWithBall();
 };
 
